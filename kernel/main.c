@@ -28,6 +28,8 @@ main()
     iinit();         // inode table
     fileinit();      // file table
     virtio_disk_init(); // emulated hard disk
+    pci_init(); // init pci for sound card
+    // soundinit(); // init sound card
     userinit();      // first user process
     __sync_synchronize();
     started = 1;
@@ -41,5 +43,5 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
-  scheduler();        
+  scheduler();
 }
