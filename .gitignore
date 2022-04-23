@@ -5,6 +5,8 @@ _*
 *.asm
 *.sym
 *.img
+*.wav
+*.mp3
 vectors.S
 bootblock
 entryother
