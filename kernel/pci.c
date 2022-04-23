@@ -1,6 +1,6 @@
 //
 // simple PCI-Express initialization, only
-// works for qemu and its e1000 card.
+// works for qemu and its AC97 card.
 //
 
 #include "types.h"
@@ -14,9 +14,9 @@
 void
 pci_init()
 {
-  // we'll place the e1000 registers at this address.
+  // we'll place the AC97 registers at this address.
   // vm.c maps this range.
-//   uint64 e1000_regs = 0x40000000L;
+  // uint64 AC97_regs = 0x40000000L;
 
   // qemu -machine virt puts PCIe config space here.
   // vm.c maps this range.
@@ -34,7 +34,7 @@ pci_init()
     // 0x24158086 is AC97
     if(id == 0x24158086){
       printf("Sound Card Found\n");
-      soundinit(); // TODO
+      AC97_init(base);
       return ;
     }
   }
