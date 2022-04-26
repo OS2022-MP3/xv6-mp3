@@ -53,26 +53,49 @@ void write_dw(volatile uint32* base_p, uint32 offset, uint32 value)
   __sync_synchronize();
 }
 
-// remember where the ich6's registers live.
-static volatile uint32 *regs;
+// remember where the ich6's configuration registers live.
+static volatile uint32 *config_regs;
+#define CONFIG_REGS_SIZE 0x2000 // space reserved for configuration registers
+static volatile uint32 *CORB_base;
+#define CORB_SIZE 1024
 
 struct spinlock ich6_lock;
 
-#define GCTL 0x08
-#define STATESTS 0x0E
+#define GCTL 0x08 // dword
+#define STATESTS 0x0E // word
+#define WAKEEN 0x0C // word
+#define INTCTL 0x20 // dword
+
+#define CORBLBASE 0x40 // dword
+#define CORBUBASE 0x44 // dword
+#define CORBCTL 0x4C // byte
+#define CORBSIZE 0x4E // byte
 
 void ich6_init(volatile uint32 *xregs)
 {
   initlock(&ich6_lock, "ich6");
-  regs = xregs;
+  config_regs = xregs; //
 
   // Reset device by writing 1 to CRST (GCTL, bit 0)
-  write_dw(regs, GCTL, read_dw(regs, GCTL) | 1);
-  if (read_dw(regs, GCTL) & 1)
-    printf("ICH6 RESET COMPLETE\n");
-  else
-    printf("ERROR: ICH6 RESET FAILED\n");
+  write_dw(config_regs, INTCTL, 0);
+  write_dw(config_regs, GCTL, read_dw(config_regs, GCTL) | 1);
+  write_dw(config_regs, INTCTL, 0);
+  while((read_dw(config_regs, GCTL) & 1) != 1); // Waiting until CRST = 1
+  printf("ICH6 Reset Completed.\n");
 
-  // printf("%x\n", read_dw(regs, STATESTS));
+  // Waiting for Status Change event.
+  while(read_w(config_regs, STATESTS) == 0); // Waiting until STATESTS != 0, may take 521 us for codec linking.
+  printf("Codec Found.\n");
+  for(int i=0;i<3;i++)
+    printf("  Codec Channel %d: %x\n", i, read_w(config_regs, STATESTS) & (1<<i));
 
+  // TODO: CORB/RIRB init
+  CORB_base = find_regs(config_regs, CONFIG_REGS_SIZE);
+  uint32 CORB_base_dw = (uint64)CORB_base;
+  write_dw(config_regs, CORBLBASE, CORB_base_dw);
+
+  printf("CORBCTL: %x\n", read_dw(config_regs, CORBCTL));
+  write_dw(CORB_base, 0, 0);
+
+  // TODO: DMA and SD
 }

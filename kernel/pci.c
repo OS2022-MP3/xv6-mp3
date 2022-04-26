@@ -13,6 +13,7 @@
 
 #define PCICMD (0x04/4)
 #define BUS_BASE (0x10/4)
+#define AZCTL (0x40/4)
 
 void
 pci_init()
@@ -33,7 +34,7 @@ pci_init()
 
     // 0x26688086 is ich6
     if(id == 0x26688086){
-      printf("ICH6 FOUND\n");
+      printf("ICH6 Found\n");
       // command and status register.
       // bit 0 : I/O access enable
       // bit 1 : memory access enable
@@ -43,7 +44,6 @@ pci_init()
 
       for(int i = 0; i < 2; i++){
         uint32 old = base[BUS_BASE+i];
-
         // writing all 1's to the BAR causes it to be
         // replaced with its size.
         base[BUS_BASE+i] = 0xffffffff;
@@ -61,5 +61,5 @@ pci_init()
       return ;
     }
   }
-  printf("ICH6 NOT FOUND\n");
+  printf("ERROR: ICH6 NOT FOUND\n");
 }
