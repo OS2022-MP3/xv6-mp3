@@ -11,16 +11,16 @@
 #include "proc.h"
 #include "defs.h"
 
+#define PCICMD (0x04/4)
+#define BUS_BASE (0x10/4)
+
 void
 pci_init()
 {
-  // we'll place the AC97 registers at this address.
-  // vm.c maps this range.
-  // uint64 AC97_regs = 0x40000000L;
-
   // qemu -machine virt puts PCIe config space here.
   // vm.c maps this range.
   uint32  *ecam = (uint32 *) 0x30000000L;
+  uint64 hda_regs = 0x40000000L;
 
   // look at each possible PCI device on bus 0.
   for(int dev = 0; dev < 32; dev++){
@@ -31,12 +31,35 @@ pci_init()
     volatile uint32 *base = ecam + off;
     uint32 id = base[0];
 
-    // 0x24158086 is AC97
-    if(id == 0x24158086){
-      printf("Sound Card Found\n");
-      AC97_init(base);
+    // 0x26688086 is ich6
+    if(id == 0x26688086){
+      printf("ICH6 FOUND\n");
+      // command and status register.
+      // bit 0 : I/O access enable
+      // bit 1 : memory access enable
+      // bit 2 : enable mastering
+      base[PCICMD] = 7;
+      __sync_synchronize();
+
+      for(int i = 0; i < 2; i++){
+        uint32 old = base[BUS_BASE+i];
+
+        // writing all 1's to the BAR causes it to be
+        // replaced with its size.
+        base[BUS_BASE+i] = 0xffffffff;
+        __sync_synchronize();
+
+        base[BUS_BASE+i] = old;
+      }
+
+      // tell the ich6 to reveal its registers at
+      // physical address 0x40000000.
+      base[BUS_BASE+0] = hda_regs;
+      __sync_synchronize();
+
+      ich6_init((uint32*)hda_regs);
       return ;
     }
   }
-  printf("SOUND CARD NOT FOUND\n");
+  printf("ICH6 NOT FOUND\n");
 }

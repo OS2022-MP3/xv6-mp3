@@ -188,8 +188,8 @@ void            soundinit(void);
 // pci.c
 void            pci_init();
 
-// AC97.c
-void            AC97_init(volatile uint32 *);
+// ich6.c
+void            ich6_init(volatile uint32 *);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

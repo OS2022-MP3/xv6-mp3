@@ -31,7 +31,7 @@ OBJS = \
   $K/virtio_disk.o
 
 OBJS += \
-  $K/AC97.o \
+  $K/ich6.o \
   $K/pci.o
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
@@ -164,8 +164,8 @@ QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nogr
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-QEMUOPTS += -audiodev id=pa,driver=pa
-QEMUOPTS += -device AC97,id=sound0,bus=pcie.0,audiodev=pa
+# QEMUOPTS += -audiodev id=pa,driver=pa
+QEMUOPTS += -device intel-hda,id=sound0,bus=pcie.0 #,audiodev=pa
 
 qemu: $K/kernel fs.img
 	$(QEMU) $(QEMUOPTS)
