@@ -42,16 +42,6 @@ pci_init()
       base[PCICMD] = 7;
       __sync_synchronize();
 
-      for(int i = 0; i < 2; i++){
-        uint32 old = base[BUS_BASE+i];
-        // writing all 1's to the BAR causes it to be
-        // replaced with its size.
-        base[BUS_BASE+i] = 0xffffffff;
-        __sync_synchronize();
-
-        base[BUS_BASE+i] = old;
-      }
-
       // tell the ich6 to reveal its registers at
       // physical address 0x40000000.
       base[BUS_BASE+0] = hda_regs;

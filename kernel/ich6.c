@@ -68,6 +68,7 @@ struct spinlock ich6_lock;
 #define CORBUBASE 0x44 // dword
 #define CORBRP 0x4A // word
 #define CORBCTL 0x4C // byte
+#define CORBST 0x4D // byte
 #define CORBSIZE 0x4E // byte
 
 #define RIRBLBASE 0x50 // dword
@@ -78,6 +79,9 @@ struct spinlock ich6_lock;
 #define RIRBSTS 0x5D // byte
 #define RIRBSIZE 0x5E // byte
 
+#define IC 0x60 // dword
+#define IR 0x64 // dword
+#define IRS 0x68 // word
 
 // CORB ring buffer
 #define CORB_SIZE 256
@@ -153,24 +157,42 @@ void ich6_init(volatile uint32 *xregs)
   // Reset device by writing 1 to CRST (GCTL, bit 0)
   write_dw(config_regs, GCTL, read_dw(config_regs, GCTL) | 1);
   while((read_dw(config_regs, GCTL) & 1) != 1); // Waiting until CRST = 1
+  // for(int i=0;i<1e9;i++);
   printf("ICH6 Reset Completed.\n");
 
   // Waiting for Status Change event.
-  while(read_w(config_regs, STATESTS) == 0); // Waiting until STATESTS != 0, may take 521 us for codec linking.
+  while(read_w(config_regs, STATESTS) == 0); // Waiting until STATESTS != 0
+  // for(int i=0;i<1e9;i++);
   printf("Codec Found.\n");
   for(int i=0;i<3;i++)
     printf("  Codec Channel %d: %x\n", i, read_w(config_regs, STATESTS) & (1<<i));
 
+  /*
   // CORB/RIRB init
   corb_init();
   rirb_init();
 
+  printf("GCAP: %x\n", read_w(config_regs, 0));
   // DEBUG: CORB/RIRB test
   uint32 testVerb = get_verb_codec(0, 0, 0, 0);
   CORB_ring_buffer[1] = testVerb;
   write_w(config_regs, CORBRP, 0x1);
   while (read_b(config_regs, RIRBWP) == 0);
   printf("%x\n", RIRB_ring_buffer[0].Response);
+  // printf("CORB ERROR CODE: %x\n", read_b(config_regs, CORBST));
+  */
+
+  // Immediate Command
+
+  // for (int i=0;i<=4;i+=2) {
+  write_w(config_regs, IRS, 0x2);
+  uint32 testVerb = get_verb_codec(0, 0, 0xf00, 0x00); // get Vendor ID
+  write_dw(config_regs, IC, testVerb);
+  write_w(config_regs, IRS, 0x1);
+  printf("IRS: %x\n", read_w(config_regs, IRS));
+  printf("IR: %x\n", read_dw(config_regs, IR));
+  // }
+
 
   // TODO: DMA and SD
 }
