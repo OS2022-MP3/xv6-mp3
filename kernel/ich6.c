@@ -64,6 +64,8 @@ struct spinlock ich6_lock;
 #define WAKEEN 0x0C // word
 #define INTCTL 0x20 // dword
 
+#define SSYNC 0x34 // dword
+
 #define CORBLBASE 0x40 // dword
 #define CORBUBASE 0x44 // dword
 #define CORBRP 0x4A // word
@@ -82,6 +84,17 @@ struct spinlock ich6_lock;
 #define IC 0x60 // dword
 #define IR 0x64 // dword
 #define IRS 0x68 // word
+
+#define SDCTL 0x100 // 24 bits
+#define SDSTS 0x103 // byte
+#define SDLPIB 0x104 // dword
+#define SDCBL 0x108 // dword
+#define SDLVI 0x10C // word
+#define SDFIFOW 0x10E // word
+#define SDFIFOS 0x110 // word
+#define SDFMT 0x112 // word
+#define SDBDPL 0x118 // dword
+#define SDBDPU 0x11C // dword
 
 // CORB ring buffer
 #define CORB_SIZE 256
@@ -156,10 +169,43 @@ void* rirb_init()
   return (void*)rirb_addr;
 }
 
+// payload = 8 bits. (for most codec control command)
 uint32 get_verb_codec(uint32 Cad, uint32 NID, uint32 verbCode, uint32 payload)
 {
   return (Cad << 28) | (NID << 20) | (verbCode << 8) | (payload);
 }
+
+// payload = 16 bits. (Gain/Mute, Converter Format, etc.)
+uint32 get_verb_codec16(uint32 Cad, uint32 NID, uint32 verbCode, uint32 payload)
+{
+  return (Cad << 28) | (NID << 20) | (verbCode << 16) | (payload);
+}
+
+uint32 immediateCommand(uint32 Cad, uint32 NID, uint32 verbCode, uint32 payload)
+{
+  write_w(config_regs, IRS, 0x2);
+  uint32 testVerb = get_verb_codec(Cad, NID, verbCode, payload);
+  write_dw(config_regs, IC, testVerb);
+  write_w(config_regs, IRS, 0x1);
+  while(read_w(config_regs, IRS) != 2);
+  return read_dw(config_regs, IR);
+}
+
+// payload = 16 bits
+uint32 immediateCommand16(uint32 Cad, uint32 NID, uint32 verbCode, uint32 payload)
+{
+  write_w(config_regs, IRS, 0x2);
+  uint32 testVerb = get_verb_codec16(Cad, NID, verbCode, payload);
+  write_dw(config_regs, IC, testVerb);
+  write_w(config_regs, IRS, 0x1);
+  while(read_w(config_regs, IRS) != 2);
+  return read_dw(config_regs, IR);
+}
+
+#define STREAM_DATA_SIZE 4096
+uint16 streamDataList[STREAM_DATA_SIZE];
+#define BDL_SIZE 128
+uint32 bufferDespList[BDL_SIZE * 4];
 
 void ich6_init(volatile uint32 *xregs)
 {
@@ -183,36 +229,63 @@ void ich6_init(volatile uint32 *xregs)
   // CORB/RIRB init
   uint32 *corb_addr = corb_init();
   uint64 *rirb_addr = rirb_init();
-
-  // DEBUG: CORB/RIRB test
-  uint32 testVerb_ = get_verb_codec(0, 0, 0xf00, 0x00);
-  corb_addr[1] = testVerb;
-  printf("%x\n", corb_addr[1]);
-  write_w(config_regs, CORBRP, 0x1);
-  printf("%x\n", read_dw(config_regs, CORBLBASE));
-  while (read_b(config_regs, RIRBWP) == 0);
-  printf("%x\n", (rirb_addr[1]>>32));
-  // printf("CORB ERROR CODE: %x\n", read_b(config_regs, CORBST));
   */
-  
+
   // Immediate Command
-
-  // for (int i=0;i<=4;i+=2) {
-  write_w(config_regs, IRS, 0x2);
-  uint32 testVerb = get_verb_codec(0, 1, 0xf1c, 0x00); // get Vendor ID
-  write_dw(config_regs, IC, testVerb);
-  write_w(config_regs, IRS, 0x1);
-  printf("IRS: %x\n", read_w(config_regs, IRS));
-  printf("IR: %x\n", read_dw(config_regs, IR));
-  // }
-
   /*
   Node Info:
   NID 0 : root node
   NID 1 : Audio Function Group
   NID 2 : Audio Output
+          - 16-bit audio
+          - Sample Rate: 16.0kHz - 96.0 kHz (R7 = 48.0 kHz, Supported by all codecs)
   NID 3 : Pin Complex
+          - Output Capable = 1
+          - Connection List Length = 1
+          - ConnectionList[0] = 2
   */
 
-  // TODO: DMA and SD
+  uint32 random_num = 2333;
+  uint32 random_mod = 1e9 + 7;
+  for (int i=0;i<STREAM_DATA_SIZE;i++) {
+    random_num = (random_num * 9973 + 2333) % random_mod;
+    streamDataList[i] = random_num & 0xffff;
+  }
+
+  // 2 entries BDL
+  uint64 bdl_base = ((uint64)bufferDespList & 0xffffff00) + 0x100;
+  uint32* bdl_addr = (void*)bdl_base;
+  // bdl[0]
+  bdl_addr[0] = (uint64)streamDataList;
+  bdl_addr[1] = 0;
+  bdl_addr[2] = 0x80;
+  bdl_addr[3] = 0;
+  // bdl[1]
+  bdl_addr[4] = (uint64)streamDataList + 2 * 0x80;
+  bdl_addr[5] = 0;
+  bdl_addr[6] = 0x80;
+  bdl_addr[7] = 0;
+
+  // config Stream Descriptor
+  write_dw(config_regs, SDBDPL, (uint64)bdl_addr); // BDL address
+  write_w(config_regs, SDFMT, 1 << 4); // set format = 48kHz, 16bit
+  write_w(config_regs, SDLVI, 1); // last valid = 1  <=  bdl size = 2
+  write_w(config_regs, SDCBL, 0x80); // buffer length
+  write_dw(config_regs, SDCTL, (1 << 1) | (1 << 20)); // Stream run (Stream ID = 1)
+
+  // Pin Widget
+  immediateCommand(0, 3, 0x707, 1 << 6); // pin output enable
+
+  // Audio Output (DAC)
+  immediateCommand(0, 2, 0x706, 1 << 4); // Connect to Stream 1, Channel 0
+  // immediateCommand16(0, 2, 0x3, (1 << 15) | (immediateCommand16(0, 2, 0xB, 1 << 15) ^ (1 << 7)));
+  // No Need to disable mute
+  immediateCommand16(0, 2, 0x2, 1 << 4); // set foramt = Stream format
+  printf("%x\n", immediateCommand16(0, 2, 0xA, 0));
+
+  // SYNC
+  write_dw(config_regs, SSYNC, 1);
+  printf("%x\n", read_dw(config_regs, SSYNC));
+
+  printf("%x\n", immediateCommand16(0, 2, 0xB, 1 << 15));
 }
