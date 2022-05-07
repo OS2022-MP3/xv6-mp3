@@ -86,7 +86,7 @@ struct spinlock ich6_lock;
 // CORB ring buffer
 #define CORB_SIZE 256
 static uint32 CORB_ring_buffer[CORB_SIZE];
-void corb_init()
+void* corb_init()
 {
   // Ensure CORB is stopped.
   if ((read_b(config_regs, CORBCTL) >> 1) & 1) // DMA running
@@ -99,9 +99,13 @@ void corb_init()
 
   memset(CORB_ring_buffer, 0, sizeof(CORB_ring_buffer));
   // Tell CORB the address of the ring buffer.
-  uint64 corb_addr = (uint64)CORB_ring_buffer;
+  uint64 corb_addr = 0x40002000L;
   write_dw(config_regs, CORBLBASE, corb_addr & 0xffffffff);
   write_dw(config_regs, CORBUBASE, corb_addr >> 32);
+
+  corb_addr = read_dw(config_regs, CORBUBASE);
+  corb_addr = (corb_addr<<32);
+  corb_addr |= read_dw(config_regs, CORBLBASE);
 
   // Reset Read Pointer
   write_w(config_regs, CORBRP, 1 << 15);
@@ -109,6 +113,8 @@ void corb_init()
   // Run CORB
   write_b(config_regs, CORBCTL, 2); // CORB DMA Engine = DMA run
   printf("CORB Running\n");
+
+  return (void*)corb_addr;
 }
 
 // RIRB ring buffer
@@ -119,7 +125,7 @@ struct RIRB_Entry
   uint32 Resp_Ex;
 };
 static struct RIRB_Entry RIRB_ring_buffer[RIRB_SIZE];
-void rirb_init()
+void* rirb_init()
 {
   // Ensure RIRB is stopped.
   if ((read_b(config_regs, RIRBCTL) >> 1) & 1) // DMA running
@@ -132,9 +138,13 @@ void rirb_init()
 
   memset(RIRB_ring_buffer, 0, sizeof(RIRB_ring_buffer));
   // Tell RIRB the address of the ring buffer.
-  uint64 rirb_addr = (uint64)RIRB_ring_buffer;
+  uint64 rirb_addr = 0x40003000L;
   write_dw(config_regs, RIRBLBASE, rirb_addr & 0xffffffff);
   write_dw(config_regs, RIRBUBASE, rirb_addr >> 32);
+
+  rirb_addr = read_dw(config_regs, CORBUBASE);
+  rirb_addr = (rirb_addr<<32);
+  rirb_addr |= read_dw(config_regs, CORBLBASE);
 
   // Reset Read Pointer
   write_w(config_regs, RIRBWP, 1 << 15);
@@ -142,6 +152,8 @@ void rirb_init()
   // Run RIRB
   write_b(config_regs, RIRBCTL, 2); // RIRB DMA Engine = DMA run
   printf("RIRB Running\n");
+
+  return (void*)rirb_addr;
 }
 
 uint32 get_verb_codec(uint32 Cad, uint32 NID, uint32 verbCode, uint32 payload)
@@ -169,30 +181,38 @@ void ich6_init(volatile uint32 *xregs)
 
   /*
   // CORB/RIRB init
-  corb_init();
-  rirb_init();
+  uint32 *corb_addr = corb_init();
+  uint64 *rirb_addr = rirb_init();
 
-  printf("GCAP: %x\n", read_w(config_regs, 0));
   // DEBUG: CORB/RIRB test
-  uint32 testVerb = get_verb_codec(0, 0, 0, 0);
-  CORB_ring_buffer[1] = testVerb;
+  uint32 testVerb_ = get_verb_codec(0, 0, 0xf00, 0x00);
+  corb_addr[1] = testVerb;
+  printf("%x\n", corb_addr[1]);
   write_w(config_regs, CORBRP, 0x1);
+  printf("%x\n", read_dw(config_regs, CORBLBASE));
   while (read_b(config_regs, RIRBWP) == 0);
-  printf("%x\n", RIRB_ring_buffer[0].Response);
+  printf("%x\n", (rirb_addr[1]>>32));
   // printf("CORB ERROR CODE: %x\n", read_b(config_regs, CORBST));
   */
-
+  
   // Immediate Command
 
   // for (int i=0;i<=4;i+=2) {
   write_w(config_regs, IRS, 0x2);
-  uint32 testVerb = get_verb_codec(0, 0, 0xf00, 0x00); // get Vendor ID
+  uint32 testVerb = get_verb_codec(0, 1, 0xf1c, 0x00); // get Vendor ID
   write_dw(config_regs, IC, testVerb);
   write_w(config_regs, IRS, 0x1);
   printf("IRS: %x\n", read_w(config_regs, IRS));
   printf("IR: %x\n", read_dw(config_regs, IR));
   // }
 
+  /*
+  Node Info:
+  NID 0 : root node
+  NID 1 : Audio Function Group
+  NID 2 : Audio Output
+  NID 3 : Pin Complex
+  */
 
   // TODO: DMA and SD
 }
