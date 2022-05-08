@@ -257,6 +257,7 @@ void ich6_init(volatile uint32 *xregs)
   uint32* bdl_addr = (void*)bdl_base;
   // bdl[0]
   bdl_addr[0] = (uint64)streamDataList;
+  //printf("%x\n",bdl_addr[0]);
   bdl_addr[1] = 0;
   bdl_addr[2] = 0x80;
   bdl_addr[3] = 0;
@@ -266,6 +267,8 @@ void ich6_init(volatile uint32 *xregs)
   bdl_addr[6] = 0x80;
   bdl_addr[7] = 0;
 
+  //printf("%x\n",immediateCommand(0,2,0xf00,0x12) &0x0f);
+
   // config Stream Descriptor
   write_dw(config_regs, SDBDPL, (uint64)bdl_addr); // BDL address
   write_w(config_regs, SDFMT, 1 << 4); // set format = 48kHz, 16bit
@@ -274,18 +277,19 @@ void ich6_init(volatile uint32 *xregs)
   write_dw(config_regs, SDCTL, (1 << 1) | (1 << 20)); // Stream run (Stream ID = 1)
 
   // Pin Widget
-  immediateCommand(0, 3, 0x707, 1 << 6); // pin output enable
+  //immediateCommand(0, 3, 0x707, 1 << 6); // pin output enable
 
   // Audio Output (DAC)
   immediateCommand(0, 2, 0x706, 1 << 4); // Connect to Stream 1, Channel 0
-  // immediateCommand16(0, 2, 0x3, (1 << 15) | (immediateCommand16(0, 2, 0xB, 1 << 15) ^ (1 << 7)));
+  immediateCommand16(0, 2, 0x3, (1 << 15) | (immediateCommand16(0, 2, 0xB, 1 << 15) ^ (1 << 7)));
   // No Need to disable mute
   immediateCommand16(0, 2, 0x2, 1 << 4); // set foramt = Stream format
-  printf("%x\n", immediateCommand16(0, 2, 0xA, 0));
+  //printf("%x\n", immediateCommand16(0, 2, 0xA, 0));
 
   // SYNC
-  write_dw(config_regs, SSYNC, 1);
+  printf("%x\n",read_dw(config_regs, SSYNC));
+  write_dw(config_regs, SSYNC, 0);
   printf("%x\n", read_dw(config_regs, SSYNC));
 
-  printf("%x\n", immediateCommand16(0, 2, 0xB, 1 << 15));
+  //printf("%x\n", immediateCommand16(0, 2, 0xB, 1 << 15));
 }

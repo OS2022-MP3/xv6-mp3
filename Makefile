@@ -166,9 +166,9 @@ QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
 QEMUOPTS += -audiodev id=pa,driver=pa
 QEMUOPTS += -device intel-hda,id=sound0,bus=pcie.0
-QEMUOPTS += -device hda-output,audiodev=pa
-# QEMUOPTS += -device hda-duplex,audiodev=pa
-# QEMUOPTS += -device hda-micro,audiodev=pa
+#QEMUOPTS += -device hda-output,audiodev=pa
+#QEMUOPTS += -device hda-duplex,audiodev=pa
+QEMUOPTS += -device hda-micro,audiodev=pa
 
 qemu: $K/kernel fs.img
 	$(QEMU) $(QEMUOPTS)
