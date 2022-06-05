@@ -137,9 +137,10 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_decode\
 
 fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
+	mkfs/mkfs fs.img README test.mp3 $(UPROGS)
 
 -include kernel/*.d user/*.d
 
