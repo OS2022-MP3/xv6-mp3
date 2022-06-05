@@ -1,8 +1,3 @@
-//
-// simple PCI-Express initialization, only
-// works for qemu and its AC97 card.
-//
-
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
@@ -14,6 +9,7 @@
 #define PCICMD (0x04/4)
 #define BUS_BASE (0x10/4)
 #define AZCTL (0x40/4)
+#define AZBAR (0x10/4)
 
 void
 pci_init()
@@ -33,8 +29,9 @@ pci_init()
     uint32 id = base[0];
 
     // 0x26688086 is ich6
+    // printf("%x\n", id);
     if(id == 0x26688086){
-      printf("ICH6 Found\n");
+      printf("ICH6 Found: device %d\n", dev);
       // command and status register.
       // bit 0 : I/O access enable
       // bit 1 : memory access enable
@@ -44,7 +41,7 @@ pci_init()
 
       // tell the ich6 to reveal its registers at
       // physical address 0x40000000.
-      base[BUS_BASE+0] = hda_regs;
+      base[AZBAR] = hda_regs;
       __sync_synchronize();
 
       ich6_init((uint32*)hda_regs);

@@ -36,6 +36,9 @@ kvmmake(void)
   // pci.c maps the AC97's registers here.
   kvmmap(kpgtbl, 0x40000000L, 0x40000000L, 0x20000, PTE_R | PTE_W);
 
+  // PCIE PIO
+  kvmmap(kpgtbl, 0x3000000, 0x3000000, 0x10000, PTE_R | PTE_W);
+
   // PLIC
   kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
 
