@@ -14,13 +14,13 @@ main(int argc, char *argv[])
   fd = open(argv[1], O_RDWR);
   if (fd < 0)
   {
-    printf(0, "open wav file fail\n");
+    printf("open wav file fail\n");
     exit(0);
   }
 
   read(fd, &info, sizeof(struct wav));
   if ((info.riff_id != 0x46464952)||(info.wave_id != 0x45564157)) {
-    printf(0, "invalid file format\n");
+    printf("invalid file format\n");
     close(fd);
     exit(0);
   }
@@ -29,7 +29,7 @@ main(int argc, char *argv[])
       (info.info.channel != 0x0002)||
       (info.info.bytes_per_sample != 0x0004)||
       (info.info.bits_per_sample != 0x0010)) {
-    printf(0, "data encoded in an unaccepted way\n");
+    printf("data encoded in an unaccepted way\n");
     close(fd);
     exit(0);
   }
@@ -38,7 +38,7 @@ main(int argc, char *argv[])
   if (pid == 0) {
 	exec("sh",argv);
   }
-  printf(0, "%d", info.info.sample_rate);
+  printf("%d", info.info.sample_rate);
   setSampleRate(info.info.sample_rate);
   uint rd = 0;
   char buf[512];

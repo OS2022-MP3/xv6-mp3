@@ -93,7 +93,7 @@ $U/initcode: $U/initcode.S
 tags: $(OBJS) _init
 	etags *.S *.c
 
-ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o $K/stream.o 
+ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o $K/stream.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -142,8 +142,8 @@ UPROGS=\
 	$U/_play\
 	$U/_pause\
 
-fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README ding.wav $(UPROGS)
+fs.img: mkfs/mkfs README ding.wav test.mp3 $(UPROGS)
+	mkfs/mkfs fs.img README ding.wav test.mp3 $(UPROGS)
 
 -include kernel/*.d user/*.d
 
@@ -169,7 +169,7 @@ QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nogr
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-QEMUOPTS += -audiodev id=pa,driver=wav,out.frequency=48000
+QEMUOPTS += -audiodev id=pa,driver=alsa
 
 # QEMUOPTS += -device intel-hda,id=sound0,bus=pcie.0
 # QEMUOPTS += -device hda-output,audiodev=pa
