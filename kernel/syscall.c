@@ -71,6 +71,20 @@ argaddr(int n, uint64 *ip)
   return 0;
 }
 
+int
+argptr(int n, char **pp, int size)
+{
+  uint64 i;
+  struct proc *p = myproc();
+
+  if(argint(n, (int *)&i) < 0)
+    return -1;
+  if((uint)i >= p->sz || (uint)i+size >= p->sz)
+    return -1;
+  *pp = (char *) i;
+  return 0;
+}
+
 // Fetch the nth word-sized system call argument as a null-terminated string.
 // Copies into buf, at most max.
 // Returns string length if OK (including nul), -1 if error.
@@ -104,6 +118,16 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_setSampleRate(void);
+extern uint64 sys_pause(void);
+extern uint64 sys_wavdecode(void);
+extern uint64 sys_waitForDecode(void);
+extern uint64 sys_beginDecode(void);
+extern uint64 sys_endDecode(void);
+extern uint64 sys_getCoreBuf(void);
+extern uint64 sys_wavdecode_wav(void);
+extern uint64 sys_kwrite_wav(void);
+extern uint64 sys_kwrite(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -127,6 +151,16 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_setSampleRate] sys_setSampleRate,
+[SYS_pause] sys_pause,
+[SYS_wavdecode] sys_wavdecode,
+[SYS_beginDecode] sys_beginDecode,
+[SYS_waitForDecode] sys_waitForDecode,
+[SYS_endDecode] sys_endDecode,
+[SYS_getCoreBuf] sys_getCoreBuf,
+[SYS_kwrite_wav] sys_kwrite_wav,
+[SYS_wavdecode_wav] sys_wavdecode_wav,
+[SYS_kwrite] sys_kwrite,
 };
 
 void

@@ -134,6 +134,7 @@ char*           strncpy(char*, const char*, int);
 // syscall.c
 int             argint(int, int*);
 int             argstr(int, char*, int);
+int             argptr(int, char**, int);
 int             argaddr(int, uint64 *);
 int             fetchstr(uint64, char*, int);
 int             fetchaddr(uint64, uint64*);
@@ -190,6 +191,9 @@ void            ich6_init(volatile uint32 *);
 
 // ac97.c
 void            soundinit();
+void            soundcardinit(uchar, uchar, uchar);
+void            soundInterrupt(void);
+void            setSoundSampleRate(uint samplerate);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

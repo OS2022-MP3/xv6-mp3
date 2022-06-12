@@ -23,6 +23,15 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int setSampleRate(int);
+int pause();
+int wavdecode();
+int wavdecode_wav();
+int beginDecode();
+int waitForDecode();
+int endDecode();
+int getCoreBuf();
+int kwrite(void*, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

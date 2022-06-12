@@ -16,6 +16,7 @@ OBJS = \
   $K/swtch.o \
   $K/trampoline.o \
   $K/trap.o \
+  $K/sysaudio.o \
   $K/syscall.o \
   $K/sysproc.o \
   $K/bio.o \
@@ -92,7 +93,7 @@ $U/initcode: $U/initcode.S
 tags: $(OBJS) _init
 	etags *.S *.c
 
-ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
+ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o $K/stream.o 
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -138,9 +139,11 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_decode\
+	$U/_play\
+	$U/_pause\
 
 fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README test.mp3 $(UPROGS)
+	mkfs/mkfs fs.img README ding.wav $(UPROGS)
 
 -include kernel/*.d user/*.d
 
