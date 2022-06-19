@@ -38,7 +38,7 @@ main(int argc, char *argv[])
   if (pid == 0) {
 	exec("sh",argv);
   }
-  printf("%d", info.info.sample_rate);
+  printf("Sample Rate: %d\n", info.info.sample_rate);
   setSampleRate(info.info.sample_rate);
   uint rd = 0;
   char buf[512];

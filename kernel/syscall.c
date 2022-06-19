@@ -81,7 +81,7 @@ argptr(int n, char **pp, int size)
     return -1;
   if((uint)i >= p->sz || (uint)i+size >= p->sz)
     return -1;
-  *pp = (char *) i;
+  *pp = (char *) (i + KERNBASE);
   return 0;
 }
 

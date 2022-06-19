@@ -49,7 +49,7 @@ static struct spinlock sound_lock;
 static struct soundNode *soundQueue;
 
 struct descriptor{
-  uint64 buf;
+  uint32 buf;
   uint cmd_len;
 };
 
@@ -90,6 +90,8 @@ void write_pci_config_short(uint32 bus, uint32 slot, uint32 func, uint32 offset,
 void write_pci_config_int(uint32 bus, uint32 slot, uint32 func, uint32 offset, uint32 val) {
   WriteRegInt((bus << 20) | (slot << 15) | (func << 12) | (offset) | PCIE_ECAM, val);
 }
+
+void test();
 
 void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   initlock(&sound_lock, "sound");
@@ -138,6 +140,52 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   write_pci_config_int(bus, slot, func, PCI_CONFIG_SPACE_SID_SVID, vendorID);
 
   printf("vendorID:%x\n", vendorID);
+
+  //init base register
+  uint64 base = (uint64)descriTable ;
+  WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
+  printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
+
+  test();
+}
+
+uchar temp[DMA_BUF_SIZE*DMA_BUF_NUM];
+void test()
+{
+  struct spinlock t;
+  initlock(&t, "sud");
+  setSoundSampleRate(44100);
+  while(1)
+  {
+  acquire(&t);
+  for (int j = 1; j < DMA_BUF_SIZE*DMA_BUF_NUM; j++)
+  {
+      temp[j] = (temp[j-1]+1)%256;
+  }
+  for (int i = 0; i < DMA_BUF_NUM; i++)
+    {
+        descriTable[i].buf = (uint64)(temp + i * DMA_BUF_SIZE);
+        descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
+    }
+    
+    // uint64 base = (uint64)descriTable ;
+
+    {
+        
+        //init last valid index
+        WriteRegByte(PCIE_PIO | (PO_LVI), 0x1F);
+        //init control register
+        //run audio
+        //enable interrupt
+        WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
+        // printf("play");
+    }
+    release(&t);
+  }
+  // while (1) {
+  //   for(int i=0;i<3000000;i++);
+  //   printf("CVI: %x\n", ReadRegByte(PCIE_PIO | (nabmba + 0x14)));
+  // }
 }
 
 void soundinit(void) {
@@ -219,6 +267,7 @@ void soundInterrupt(void)
 
 void playSound(void)
 {
+  // printf("playSound\n");
     int i;
 
     //遍历声卡DMA的描述符列表，初始化每一个描述符buf指向缓冲队列中第一个音乐的数据块
