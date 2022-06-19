@@ -178,7 +178,6 @@ QEMUOPTS += -audiodev id=pa,driver=alsa
 
 QEMUOPTS += -device AC97,audiodev=pa
 
-# QEMUOPTS += -soundhw ac97
 
 qemu: $K/kernel fs.img
 	$(QEMU) $(QEMUOPTS)
@@ -189,3 +188,6 @@ qemu: $K/kernel fs.img
 qemu-gdb: $K/kernel .gdbinit fs.img
 	@echo "*** Now run 'gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
+
+gdb: 
+	riscv64-unknown-elf-gdb kernel/kernel

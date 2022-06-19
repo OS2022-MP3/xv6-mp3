@@ -155,7 +155,7 @@ void test()
   struct spinlock t;
   initlock(&t, "sud");
   setSoundSampleRate(44100);
-  while(1)
+  //while(1)
   {
   acquire(&t);
   for (int j = 1; j < DMA_BUF_SIZE*DMA_BUF_NUM; j++)
@@ -168,10 +168,6 @@ void test()
         descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
     }
     
-    // uint64 base = (uint64)descriTable ;
-
-    {
-        
         //init last valid index
         WriteRegByte(PCIE_PIO | (PO_LVI), 0x1F);
         //init control register
@@ -179,7 +175,7 @@ void test()
         //enable interrupt
         WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
         // printf("play");
-    }
+    
     release(&t);
   }
   // while (1) {
@@ -221,6 +217,9 @@ void setSoundSampleRate(uint samplerate)
 void soundInterrupt(void)
 {
     int i;
+    if(soundQueue == 0)
+      return;//临时debug写的 6.20
+
     acquire(&sound_lock);
 
     struct soundNode *node = soundQueue;
@@ -278,13 +277,13 @@ void playSound(void)
         descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
     }
 
-    uint64 base = (uint64)descriTable;
+    //uint64 base = (uint64)descriTable;
 
     //开始播放: PCM_OUT
     if ((soundQueue->flag & PCM_OUT) == PCM_OUT)
     {
         //init base register
-        WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((uint64)(&base) & 0xffffffff));
+        //WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((uint64)(&base) & 0xffffffff));
         //init last valid index
         WriteRegByte(PCIE_PIO | (PO_LVI), 0x1F);
         //init control register

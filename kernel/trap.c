@@ -189,7 +189,9 @@ devintr()
       uartintr();
     } else if(irq == VIRTIO0_IRQ){
       virtio_disk_intr();
-    } else if(irq){
+    } else if(irq == SOUND_IRQ){soundInterrupt();}//没搞清楚为啥SOUND_IRQ是33
+    else if(irq)
+    {
       printf("unexpected interrupt irq=%d\n", irq);
     }
 
