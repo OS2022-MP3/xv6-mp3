@@ -126,6 +126,7 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   }
   printf("Codec is ready!\n");
 
+
   // Determining the Audio Codec
   WriteRegShort(PCIE_PIO | (NAMBA_PCMV), 0x8000);
   if ((ReadRegShort(PCIE_PIO | (NAMBA_PCMV))) != 0x8000) {

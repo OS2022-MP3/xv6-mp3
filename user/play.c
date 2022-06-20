@@ -47,6 +47,19 @@ main(int argc, char *argv[])
   //if (mp3pid == 0) {
   //    exec("decode", tmp);
   //}
+
+  // 51-60为调试时新加入
+  int decodepid = fork();
+  {
+    if(decodepid == 0)
+    {
+      while(1)
+        wavdecode_wav();
+      exit(0);
+    }
+  }
+
+
   while (rd < info.dlen)
   {
     int len = (info.dlen - rd < 512 ? info.dlen -rd : 512);

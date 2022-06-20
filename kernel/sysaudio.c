@@ -159,18 +159,20 @@ sys_wavdecode(void)
 int
 sys_wavdecode_wav(void)
 {
+    /*  调试时注释掉 6.20
     if(in == out && full == 0)
     {
         return -1;
     }
+    */
     //soundNode的数据大小
     int bufsize = DMA_BUF_NUM*DMA_BUF_SIZE;
-    //acquire(&decodelock.lock);
-    // while (isdecoding == 0)
-    // {
-       // sleep(&decodelock.nread, &decodelock.lock);
-    // }
-    //release(&decodelock.lock);
+    acquire(&decodelock.lock);
+     while (isdecoding == 0)
+     {
+        sleep(&decodelock.nread, &decodelock.lock);
+     }
+    release(&decodelock.lock);
     if (datacount == 0)
         memset(&audiobuf[bufcount], 0, sizeof(struct soundNode));
     //若soundNode的剩余大小大于数据大小，将数据写入soundNode中
