@@ -97,6 +97,7 @@ sys_wavdecode(void)
     {
 	   sleep(&decodelock.nread, &decodelock.lock);
     }
+    // printf("Wav Decode\n");
     release(&decodelock.lock);
     if (datacount == 0)
         memset(&audiobuf[bufcount], 0, sizeof(struct soundNode));
@@ -300,8 +301,10 @@ sys_kwrite(void)
     }
     if (argint(1, &size) < 0 || argptr(0, &buffer, size) < 0)
         return -1;
-    memmove(buf, buffer, size);
+    // memmove(buf, buffer, size);
+    either_copyin((void*)buf, 1, (uint64)buffer, size); // to: buf, isUserSpace: 1, from: buffer, bytes: size
     isdecoding = 1;
+    // printf("%d\n", ret);
     wakeup(&decodelock.nread);
     release(&decodelock.lock);
     return 0;

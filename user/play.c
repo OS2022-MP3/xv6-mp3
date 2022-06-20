@@ -54,7 +54,7 @@ main(int argc, char *argv[])
     if(decodepid == 0)
     {
       while(1)
-        wavdecode_wav();
+        wavdecode();
       exit(0);
     }
   }

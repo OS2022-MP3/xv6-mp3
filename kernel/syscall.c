@@ -61,6 +61,15 @@ argint(int n, int *ip)
   return 0;
 }
 
+// Fetch the nth 64-bit system call argument.
+int
+arguint64(int n, uint64 *ip)
+{
+  *ip = argraw(n);
+  return 0;
+}
+
+
 // Retrieve an argument as a pointer.
 // Doesn't check for legality, since
 // copyin/copyout will do that.
@@ -77,11 +86,11 @@ argptr(int n, char **pp, int size)
   uint64 i;
   struct proc *p = myproc();
 
-  if(argint(n, (int *)&i) < 0)
+  if(arguint64(n, &i) < 0)
     return -1;
-  if((uint)i >= p->sz || (uint)i+size >= p->sz)
+  if(i >= p->sz || i+size >= p->sz)
     return -1;
-  *pp = (char *) (i + KERNBASE);
+  *pp = (char *) i;
   return 0;
 }
 

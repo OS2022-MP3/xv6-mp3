@@ -147,7 +147,7 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
   printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
 
-  test();
+  // test();
 }
 
 uchar temp[DMA_BUF_SIZE*DMA_BUF_NUM];
@@ -174,7 +174,7 @@ void test()
         //init control register
         //run audio
         //enable interrupt
-        WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
+        WriteRegByte(PCIE_PIO | (PO_CR), (0x05) | (1 << 3));
         // printf("play");
     
     release(&t);
@@ -217,9 +217,10 @@ void setSoundSampleRate(uint samplerate)
 
 void soundInterrupt(void)
 {
+  printf("soundInterrupt\n");
     int i;
-    if(soundQueue == 0)
-      return;//临时debug写的 6.20
+    // if(soundQueue == 0)
+    //   return;//临时debug写的 6.20
 
     acquire(&sound_lock);
 
@@ -233,6 +234,7 @@ void soundInterrupt(void)
     //0 sound file left
     if (soundQueue == 0)
     {
+      // printf("0 Sound\n");
         if ((flag & PCM_OUT) == PCM_OUT)
         {
             ushort sr = ReadRegShort(PCIE_PIO | (PO_SR));
@@ -250,6 +252,7 @@ void soundInterrupt(void)
     //descriptor table buffer
     for (i = 0; i < DMA_BUF_NUM; i++)
     {
+      printf("%d\n", soundQueue->data[i]);
         descriTable[i].buf = (uint64)(soundQueue->data) + i * DMA_BUF_SIZE;
         descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
     }
@@ -298,6 +301,12 @@ void playSound(void)
 //add sound-piece to the end of queue
 void addSound(struct soundNode *node)
 {   
+  printf("Add Sound\n");
+    // for(int i=0;i<DMA_BUF_NUM*DMA_BUF_SIZE;i++)
+    //   if (node->data[i] != 0)
+    //     printf("Non-Zero: %d\n", i);
+  
+
     struct soundNode **ptr;
 
     acquire(&sound_lock);
