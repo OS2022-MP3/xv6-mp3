@@ -142,8 +142,8 @@ UPROGS=\
 	$U/_play\
 	$U/_pause\
 
-fs.img: mkfs/mkfs README ding.wav test.wav $(UPROGS)
-	mkfs/mkfs fs.img README ding.wav test.wav $(UPROGS)
+fs.img: mkfs/mkfs README ding.wav test1.wav $(UPROGS)
+	mkfs/mkfs fs.img README ding.wav test1.wav $(UPROGS)
 
 -include kernel/*.d user/*.d
 
@@ -165,7 +165,7 @@ ifndef CPUS
 CPUS := 3
 endif
 
-QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
+QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 256M -smp $(CPUS) -nographic
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
