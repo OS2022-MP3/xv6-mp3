@@ -86,7 +86,7 @@ void wavWrite_int16(char* filename, int16_t* buffer, int sampleRate, uint32_t to
 
 char* getFileBuffer(const char* fname, int* size)
 {
-    int fd = open(fname, O_WRONLY);
+    int fd = open(fname, O_RDONLY);
     if (fd == 0)
         return 0;
 
@@ -116,7 +116,7 @@ doexit:
 int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* totalSampleCount, unsigned int* channels)
 {
     int music_size = 0;
-    int alloc_samples = 1024 * 1024, num_samples = 0;
+    int alloc_samples = 1024, num_samples = 0;
     int16_t* music_buf = (int16_t*)malloc(alloc_samples * 2 * 2);
     unsigned char* file_buf = (unsigned char*)getFileBuffer(filename, &music_size);
     if (file_buf != 0)
@@ -133,7 +133,7 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
             int16_t frame_buf[2 * 1152];
                 // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
             int samples = mp3dec_decode_frame(&dec, buf, music_size, frame_buf, &info);
-                // num of samples
+            // num of samples
             if (alloc_samples < (num_samples + samples)) // need to expand the array which functions as a vector
             {
                 alloc_samples *= 2;
@@ -229,6 +229,7 @@ void splitpath(const char* path, char* drv, char* dir, char* name, char* ext)
 
 int main(int argc, char* argv[])
 {
+    sbrk(4000000);
     if (argc < 2) 
     {
         printf("Incorrect input!");
@@ -267,5 +268,5 @@ int main(int argc, char* argv[])
         free(wavBuffer);
 
     printf("Finished!\n");
-    return 0;
+    exit(0);
 }
