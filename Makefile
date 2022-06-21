@@ -142,8 +142,8 @@ UPROGS=\
 	$U/_play\
 	$U/_pause\
 
-fs.img: mkfs/mkfs README ding.wav test0.wav $(UPROGS)
-	mkfs/mkfs fs.img README ding.wav test0.wav $(UPROGS)
+fs.img: mkfs/mkfs README ding.wav test0.wav Ring01.wav Ring03.wav long2.wav long5.wav $(UPROGS)
+	mkfs/mkfs fs.img README ding.wav test0.wav Ring01.wav Ring03.wav long2.wav long5.wav $(UPROGS)
 
 -include kernel/*.d user/*.d
 

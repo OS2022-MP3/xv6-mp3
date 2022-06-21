@@ -252,7 +252,7 @@ void soundInterrupt(void)
     //descriptor table buffer
     for (i = 0; i < DMA_BUF_NUM; i++)
     {
-      printf("%d\n", soundQueue->data[i]);
+      // printf("%d\n", soundQueue->data[i]);
         descriTable[i].buf = (uint64)(soundQueue->data) + i * DMA_BUF_SIZE;
         descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
     }
@@ -318,6 +318,7 @@ void addSound(struct soundNode *node)
 
     //node is already the first
     //play sound
+    printf("soundQueue == node: %d\n", (soundQueue == node));
     if (soundQueue == node)
     {
         playSound();
