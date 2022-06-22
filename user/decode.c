@@ -124,24 +124,24 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
         unsigned char* buf = file_buf;
 
         // declared in "minimp3.h"
-        mp3dec_frame_info_t info;
-        mp3dec_t dec;
+        mp3dec_frame_info_t *info=malloc(sizeof(mp3dec_frame_info_t));
+        mp3dec_t *dec=malloc(sizeof(mp3dec_t ));
 
-        mp3dec_init(&dec);
+        mp3dec_init(dec);
         while(1)
         {
-            int16_t frame_buf[2 * 1152];
+            int16_t *frame_buf=malloc(2 * 1152* sizeof(int16_t));
                 // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
-            int samples = mp3dec_decode_frame(&dec, buf, music_size, frame_buf, &info);
+            int samples = mp3dec_decode_frame(dec, buf, music_size, frame_buf, info);
             // num of samples
             if (alloc_samples < (num_samples + samples)) // need to expand the array which functions as a vector
             {
                 alloc_samples *= 2;
 
-                int16_t *new_buf = (int16_t *)malloc(alloc_samples * 2 * info.channels);
+                int16_t *new_buf = (int16_t *)malloc(alloc_samples * 2 * info->channels);
                 if(new_buf)
                 {
-                    memcpy(new_buf, music_buf, alloc_samples * info.channels);
+                    memcpy(new_buf, music_buf, alloc_samples * info->channels);
                     free(music_buf);
                     music_buf = new_buf;
                 }
@@ -149,20 +149,20 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
                 //if (tmp)music_buf = tmp;
             }
             if (music_buf) // add the current frame data to the total data
-                memcpy(music_buf + num_samples * info.channels, frame_buf, samples * info.channels * 2);
+                memcpy(music_buf + num_samples * info->channels, frame_buf, samples * info->channels * 2);
             num_samples += samples;
-            if (info.frame_bytes <= 0 || music_size <= (info.frame_bytes + 4))
+            if (info->frame_bytes <= 0 || music_size <= (info->frame_bytes + 4))
                 break;
-            buf += info.frame_bytes;
-            music_size -= info.frame_bytes;
+            buf += info->frame_bytes;
+            music_size -= info->frame_bytes;
         }
 
         if (alloc_samples > num_samples) //shrink the data array
         {
-            int16_t *new_buf = (int16_t *)malloc(num_samples * 2 * info.channels);
+            int16_t *new_buf = (int16_t *)malloc(num_samples * 2 * info->channels);
             if(new_buf)
             {
-                memcpy(new_buf, music_buf, num_samples * 2 * info.channels);
+                memcpy(new_buf, music_buf, num_samples * 2 * info->channels);
                 free(music_buf);
                 music_buf = new_buf;
             }
@@ -171,9 +171,9 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
         }
 
         if (sampleRate)
-            *sampleRate = info.hz;
+            *sampleRate = info->hz;
         if (channels)
-            *channels = info.channels;
+            *channels = info->channels;
         if (num_samples)
             *totalSampleCount = num_samples;
 
@@ -241,10 +241,10 @@ int main(int argc, char* argv[])
     unsigned int channels = 0;
     int16_t* wavBuffer = 0;
     char drive[3];
-    char dir[256];
-    char fname[256];
-    char ext[256];
-    char out_file[1024];
+    char *dir=malloc(256);
+    char *fname=malloc(256);
+    char *ext=malloc(256);
+    char *out_file=malloc(1024);
 
 
     char *in_file = argv[1];
