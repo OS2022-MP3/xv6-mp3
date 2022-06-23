@@ -130,12 +130,6 @@ extern uint64 sys_uptime(void);
 extern uint64 sys_setSampleRate(void);
 extern uint64 sys_pause(void);
 extern uint64 sys_wavdecode(void);
-extern uint64 sys_waitForDecode(void);
-extern uint64 sys_beginDecode(void);
-extern uint64 sys_endDecode(void);
-extern uint64 sys_getCoreBuf(void);
-extern uint64 sys_wavdecode_wav(void);
-extern uint64 sys_kwrite_wav(void);
 extern uint64 sys_kwrite(void);
 
 static uint64 (*syscalls[])(void) = {
@@ -163,12 +157,6 @@ static uint64 (*syscalls[])(void) = {
 [SYS_setSampleRate] sys_setSampleRate,
 [SYS_pause] sys_pause,
 [SYS_wavdecode] sys_wavdecode,
-[SYS_beginDecode] sys_beginDecode,
-[SYS_waitForDecode] sys_waitForDecode,
-[SYS_endDecode] sys_endDecode,
-[SYS_getCoreBuf] sys_getCoreBuf,
-[SYS_kwrite_wav] sys_kwrite_wav,
-[SYS_wavdecode_wav] sys_wavdecode_wav,
 [SYS_kwrite] sys_kwrite,
 };
 

@@ -24,9 +24,3 @@
 #define SYS_kwrite 23
 #define SYS_pause 24
 #define SYS_wavdecode 25
-#define SYS_beginDecode 26
-#define SYS_waitForDecode 27
-#define SYS_endDecode 28
-#define SYS_getCoreBuf 29
-#define SYS_wavdecode_wav 30
-#define SYS_kwrite_wav 31
