@@ -230,7 +230,7 @@ void splitpath(const char* path, char* drv, char* dir, char* name, char* ext)
 
 int main(int argc, char* argv[])
 {
-    printf("Grow: %d\n", sbrk(4096 * 100));
+    sbrk(4096 * 100);
     if (argc < 2) 
     {
         printf("Incorrect input!");

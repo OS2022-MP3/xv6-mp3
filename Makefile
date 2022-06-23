@@ -143,8 +143,17 @@ UPROGS=\
 	$U/_play\
 	$U/_pause\
 
-fs.img: mkfs/mkfs README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)
-	mkfs/mkfs fs.img README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)
+AUDIOS=\
+	$A/ding.wav\
+	$A/test.mp3\
+	$A/Ring01.wav\
+	$A/Ring03.wav\
+	$A/long2.wav\
+	$A/long5.wav\
+	$A/1.mp3
+
+fs.img: mkfs/mkfs README $(AUDIOS) $(UPROGS)
+	mkfs/mkfs fs.img README $(AUDIOS) $(UPROGS)
 
 -include kernel/*.d user/*.d
 
