@@ -217,7 +217,7 @@ void setSoundSampleRate(uint samplerate)
 
 void soundInterrupt(void)
 {
-  printf("soundInterrupt\n");
+  // printf("soundInterrupt\n");
     int i;
     // if(soundQueue == 0)
     //   return;//临时debug写的 6.20
@@ -301,7 +301,7 @@ void playSound(void)
 //add sound-piece to the end of queue
 void addSound(struct soundNode *node)
 {   
-  printf("Add Sound\n");
+  // printf("Add Sound\n");
     // for(int i=0;i<DMA_BUF_NUM*DMA_BUF_SIZE;i++)
     //   if (node->data[i] != 0)
     //     printf("Non-Zero: %d\n", i);
@@ -318,11 +318,23 @@ void addSound(struct soundNode *node)
 
     //node is already the first
     //play sound
-    printf("soundQueue == node: %d\n", (soundQueue == node));
+    //printf("soundQueue == node: %d\n", (soundQueue == node));
     if (soundQueue == node)
     {
         playSound();
     }
 
     release(&sound_lock);
+}
+
+void ac97_pause(int isPaused)
+{
+  if (isPaused == 1)
+  {
+    WriteRegByte(PCIE_PIO | (PO_CR), 0);
+  }
+  else
+  {
+    WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
+  }
 }

@@ -358,10 +358,12 @@ sys_pause(void)
     sndlock.tag = 0;
     if (ispaused == 0) {
 	   ispaused = 1;
+       ac97_pause(ispaused);
     }
     else {
     	acquire(&sndlock.lock);
     	ispaused = 0;
+        ac97_pause(ispaused);
     	wakeup(&sndlock.tag);
     	release(&sndlock.lock);
     }
