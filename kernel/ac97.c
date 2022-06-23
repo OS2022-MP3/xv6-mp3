@@ -145,7 +145,7 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   //init base register
   uint64 base = (uint64)descriTable ;
   WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
-  printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
+  //printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
 
   // test();
 }
@@ -192,12 +192,12 @@ void soundinit(void) {
     uint32 vendor = res & 0xffff;
     uint32 device = (res >> 16) & 0xffff;
     if (vendor == 0x8086 && device == 0x2415) {
-      printf("AC97 found\n");
+      printf("AC97 found!\n");
       soundcard_init(bus, slot, func);
       return;
     }
   }
-  printf("AC97 NOT FOUND\n");
+  printf("AC97 NOT FOUND!\n");
 }
 
 void setSoundSampleRate(uint samplerate)

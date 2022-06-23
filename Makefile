@@ -1,5 +1,6 @@
 K=kernel
 U=user
+A=audio
 
 OBJS = \
   $K/entry.o \
@@ -142,8 +143,8 @@ UPROGS=\
 	$U/_play\
 	$U/_pause\
 
-fs.img: mkfs/mkfs README ding.wav test.mp3 Ring01.wav Ring03.wav long2.wav long5.wav $(UPROGS)
-	mkfs/mkfs fs.img README ding.wav test.mp3 Ring01.wav Ring03.wav long2.wav long5.wav $(UPROGS)
+fs.img: mkfs/mkfs README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)
+	mkfs/mkfs fs.img README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)
 
 -include kernel/*.d user/*.d
 
