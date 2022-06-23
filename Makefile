@@ -142,6 +142,7 @@ UPROGS=\
 	$U/_decode\
 	$U/_play\
 	$U/_pause\
+	$U/_player\
 
 AUDIOS=\
 	$A/ding.wav\

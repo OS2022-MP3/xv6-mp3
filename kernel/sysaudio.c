@@ -67,6 +67,7 @@ int out = 0;
 
 int sys_setSampleRate(void)
 {
+    ispaused = 0;
     corebuf.buf_bit_idx=8;
     corebuf.totbit=0;
     corebuf.buf_byte_idx=0;
@@ -192,5 +193,13 @@ sys_pause(void)
     	wakeup(&sndlock.tag);
     	release(&sndlock.lock);
     }
+    return 0;
+}
+
+int
+sys_stop(void)
+{
+    ispaused = 1;
+    ac97_stop();
     return 0;
 }
