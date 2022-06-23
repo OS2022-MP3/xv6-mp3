@@ -338,3 +338,10 @@ void ac97_pause(int isPaused)
     WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
   }
 }
+
+void ac97_stop()
+{
+  WriteRegByte(PCIE_PIO | (PO_CR), 0);
+  WriteRegByte(PCIE_PIO | (PO_CR), 0x04);
+  WriteRegByte(PCIE_PIO | (PO_CR), 0);
+}

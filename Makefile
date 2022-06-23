@@ -142,6 +142,7 @@ UPROGS=\
 	$U/_decode\
 	$U/_play\
 	$U/_pause\
+	$U/_player\
 
 fs.img: mkfs/mkfs README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)
 	mkfs/mkfs fs.img README $A/ding.wav $A/test.mp3 $A/Ring01.wav $A/Ring03.wav $A/long2.wav $A/long5.wav $(UPROGS)

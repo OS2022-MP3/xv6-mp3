@@ -131,6 +131,7 @@ extern uint64 sys_setSampleRate(void);
 extern uint64 sys_pause(void);
 extern uint64 sys_wavdecode(void);
 extern uint64 sys_kwrite(void);
+extern uint64 sys_stop(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -158,6 +159,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_pause] sys_pause,
 [SYS_wavdecode] sys_wavdecode,
 [SYS_kwrite] sys_kwrite,
+[SYS_stop] sys_stop,
 };
 
 void

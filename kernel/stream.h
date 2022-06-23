@@ -104,32 +104,4 @@ typedef struct {
 	int s[3][13];		/* [window][cb] */
 } III_scalefac_t[2];	/* [ch] */
 
-int OpenTableFile(char *name);
-
-void WriteHdr(struct frame_params *fr_ps);
-
-void *mem_alloc(unsigned long block, char *item);
-void alloc_buffer(Bit_stream_struc *bs, int size);
-void desalloc_buffer(Bit_stream_struc *bs);
-
-void open_bit_stream_r(Bit_stream_struc *bs, char *bs_filenam, int size);
-void close_bit_stream_r(Bit_stream_struc *bs);
-int	end_bs(Bit_stream_struc *bs);
-unsigned long sstell(Bit_stream_struc *bs);
-void refill_buffer(Bit_stream_struc *bs);
-
-unsigned int get1bit(Bit_stream_struc *bs);
-unsigned long getbits(Bit_stream_struc *bs, int N);
-int seek_sync(Bit_stream_struc *bs, unsigned long sync, int N);
-
-int js_bound(int lay, int m_ext);
-void hdr_to_frps(struct frame_params *fr_ps);
-
-void hputbuf(unsigned int val, int N);
-unsigned long hsstell();
-unsigned long hgetbits(int N);
-unsigned int hget1bit();
-void rewindNbits(int N);
-void rewindNbytes(int N);
-
 #endif

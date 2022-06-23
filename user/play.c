@@ -11,6 +11,8 @@ main(int argc, char *argv[])
   int fd;
   struct wav info;
 
+  stop();
+
   fd = open(argv[1], O_RDWR);
   if (fd < 0)
   {

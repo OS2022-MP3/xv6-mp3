@@ -40,3 +40,4 @@ entry("kwrite");
 entry("setSampleRate");
 entry("pause");
 entry("wavdecode");
+entry("stop");
