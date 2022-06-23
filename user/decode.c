@@ -97,6 +97,7 @@ char* getFileBuffer(const char* fname, int* size)
     file_buf = (char*)malloc(st.size + 1);
     if (file_buf != 0)
     {
+        // printf("%x\n", (uint64)file_buf);
         if(read(fd, file_buf, st.size)<0)
         {
             close(fd);
@@ -229,7 +230,7 @@ void splitpath(const char* path, char* drv, char* dir, char* name, char* ext)
 
 int main(int argc, char* argv[])
 {
-    sbrk(4000000);
+    printf("Grow: %d\n", sbrk(4096 * 100));
     if (argc < 2) 
     {
         printf("Incorrect input!");

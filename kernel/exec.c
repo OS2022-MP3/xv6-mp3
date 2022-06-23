@@ -68,10 +68,11 @@ exec(char *path, char **argv)
   // Use the second as the user stack.
   sz = PGROUNDUP(sz);
   uint64 sz1;
-  if((sz1 = uvmalloc(pagetable, sz, sz + 2*PGSIZE)) == 0)
+  const int stack_page_count = 10;
+  if((sz1 = uvmalloc(pagetable, sz, sz + stack_page_count*PGSIZE)) == 0)
     goto bad;
   sz = sz1;
-  uvmclear(pagetable, sz-2*PGSIZE);
+  uvmclear(pagetable, sz-stack_page_count*PGSIZE);
   sp = sz;
   stackbase = sp - PGSIZE;
 

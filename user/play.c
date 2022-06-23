@@ -24,6 +24,11 @@ main(int argc, char *argv[])
     close(fd);
     exit(0);
   }
+  // printf("encode conditions: %d %d %d %d\n", (info.info.id != 0x20746d66),
+  //     (info.info.channel != 0x0002),
+  //     (info.info.bytes_per_sample != 0x0004),
+  //     (info.info.bits_per_sample != 0x0010));
+  printf("%d\n", info.info.bytes_per_sample);
 
   if ((info.info.id != 0x20746d66)||
       (info.info.channel != 0x0002)||
