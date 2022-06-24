@@ -226,8 +226,9 @@ void playSound(void)
   // printf("playSound\n");
     int i;
 
-    //遍历声卡DMA的描述符列表，初始化每一个描述符buf指向缓冲队列中第一个音乐的数据块
-    //每个数据块大小: DMA_BUF_SIZE
+    //Traverse the descriptor list of DMA, 
+    //and initialize each buffer descriptor to point to the first audio data block in the buffer list
+    //size of each data block: DMA_BUF_SIZE
     for (i = 0; i < DMA_BUF_NUM; i++)
     {
         descriTable[i].buf = (uint64)(soundQueue->data) + i * DMA_BUF_SIZE;
@@ -236,7 +237,7 @@ void playSound(void)
 
     //uint64 base = (uint64)descriTable;
 
-    //开始播放: PCM_OUT
+    //begin play: PCM_OUT
     if ((soundQueue->flag & PCM_OUT) == PCM_OUT)
     {
         //init last valid index

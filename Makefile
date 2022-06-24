@@ -17,7 +17,6 @@ OBJS = \
   $K/swtch.o \
   $K/trampoline.o \
   $K/trap.o \
-  $K/sysaudio.o \
   $K/syscall.o \
   $K/sysproc.o \
   $K/bio.o \
@@ -30,12 +29,9 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
-
-OBJS += \
-  $K/ich6.o \
-  $K/pci.o \
-  $K/ac97.o
+  $K/virtio_disk.o\
+  $K/ac97.o\
+  $K/sysaudio.o
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
@@ -140,7 +136,6 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_decode\
-	$U/_pause\
 	$U/_player
 
 AUDIOS=\

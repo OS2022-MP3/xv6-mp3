@@ -34,18 +34,18 @@ static struct snd sndlock;
 int sys_setSampleRate(void)
 {
     int rate, i;
-    // 获取系统的第0个参数
+    // get the 0th parameter of the system
     if (argint(0, &rate) < 0)
         return -1;
     datacount = 0;
     bufcount = 0;
-    // 将soundNode清空并置为已处理状态
+    // empty the soundNode and put it in the processed state
     for (i = 0; i < 3; i++)
     {
         memset(&audiobuf[i], 0, sizeof(struct soundNode));
         audiobuf[i].flag = PROCESSED;
     }
-    // ac97设置采样率
+    // set sample rate for ac97
     setSoundSampleRate(rate);
     return 0;
 }
@@ -53,11 +53,12 @@ int sys_setSampleRate(void)
 int
 transfer_data(void)
 {
-    //soundNode的数据大小
+    // data size of soundNode
     int bufsize = DMA_BUF_NUM*DMA_BUF_SIZE;
     if (datacount == 0)
         memset(&audiobuf[bufcount], 0, sizeof(struct soundNode));
-    //若soundNode的剩余大小大于数据大小，将数据写入soundNode中
+    // if the remaining size of the soundNode is bigger than the data size, 
+    // write the data to the soundNode
     if (bufsize - datacount > size)
     {
         memmove(&audiobuf[bufcount].data[datacount], buf, size);
@@ -66,13 +67,13 @@ transfer_data(void)
     }
     else
     {
-        //soundNode存满后调用audioplay进行播放
+        //play after the soundNode is full
         int temp = bufsize - datacount,i;
         memmove(&audiobuf[bufcount].data[datacount], buf, temp);
         audiobuf[bufcount].flag = PCM_OUT;
         addSound(&audiobuf[bufcount]);
         int flag = 1;
-        //寻找一个已经被处理的soundNode，将剩余数据戏写入
+        //find a soundNode that has been processed and write the remaining data to
         while(flag == 1)
         {
             for (i = 0; i < 3; ++i)
