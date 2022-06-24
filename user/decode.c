@@ -116,74 +116,88 @@ doexit:
 // decode mp3 to PCM data
 int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* totalSampleCount, unsigned int* channels)
 {
+    setSampleRate(44100);
     int music_size = 0;
     int alloc_samples = 1024, num_samples = 0;
     int16_t* music_buf = (int16_t*)malloc(alloc_samples * 2 * 2);
     unsigned char* file_buf = (unsigned char*)getFileBuffer(filename, &music_size);
-    if (file_buf != 0)
+    int p = 0;
+    if (file_buf == 0)
     {
-        unsigned char* buf = file_buf;
+        if (music_buf)
+        free(music_buf);
+        return 0;
+    }
+    unsigned char* buf = file_buf;
 
-        // declared in "minimp3.h"
-        mp3dec_frame_info_t *info=malloc(sizeof(mp3dec_frame_info_t));
-        mp3dec_t *dec=malloc(sizeof(mp3dec_t ));
+    // declared in "minimp3.h"
+    mp3dec_frame_info_t *info=malloc(sizeof(mp3dec_frame_info_t));
+    mp3dec_t *dec=malloc(sizeof(mp3dec_t ));
 
-        mp3dec_init(dec);
-        while(1)
+    mp3dec_init(dec);
+    while(1)
+    {
+        int16_t *frame_buf=malloc(2 * 1152* sizeof(int16_t));
+            // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
+        int samples = mp3dec_decode_frame(dec, buf, music_size, frame_buf, info);
+        // num of samples
+        if (alloc_samples < (num_samples + samples)) // need to expand the array which functions as a vector
         {
-            int16_t *frame_buf=malloc(2 * 1152* sizeof(int16_t));
-                // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
-            int samples = mp3dec_decode_frame(dec, buf, music_size, frame_buf, info);
-            // num of samples
-            if (alloc_samples < (num_samples + samples)) // need to expand the array which functions as a vector
-            {
-                alloc_samples *= 2;
+            alloc_samples *= 2;
 
-                int16_t *new_buf = (int16_t *)malloc(alloc_samples * 2 * info->channels);
-                if(new_buf)
-                {
-                    memcpy(new_buf, music_buf, alloc_samples * info->channels);
-                    free(music_buf);
-                    music_buf = new_buf;
-                }
-                //int16_t* tmp = (int16_t*)realloc(music_buf, alloc_samples * 2 * info.channels);
-                //if (tmp)music_buf = tmp;
-            }
-            if (music_buf) // add the current frame data to the total data
-                memcpy(music_buf + num_samples * info->channels, frame_buf, samples * info->channels * 2);
-            num_samples += samples;
-            if (info->frame_bytes <= 0 || music_size <= (info->frame_bytes + 4))
-                break;
-            buf += info->frame_bytes;
-            music_size -= info->frame_bytes;
-        }
-
-        if (alloc_samples > num_samples) //shrink the data array
-        {
-            int16_t *new_buf = (int16_t *)malloc(num_samples * 2 * info->channels);
+            int16_t *new_buf = (int16_t *)malloc(alloc_samples * 2 * info->channels);
             if(new_buf)
             {
-                memcpy(new_buf, music_buf, num_samples * 2 * info->channels);
+                memcpy(new_buf, music_buf, alloc_samples * info->channels);
                 free(music_buf);
                 music_buf = new_buf;
             }
-            //int16_t* tmp = (int16_t*)realloc(music_buf, num_samples * 2 * info.channels);
-            //if (tmp)= music_buf = tmp;
         }
+        if (music_buf) // add the current frame data to the total data
+            memcpy(music_buf + num_samples * info->channels, frame_buf, samples * info->channels * 2);
+        num_samples += samples;
+        if (info->frame_bytes <= 0 || music_size <= (info->frame_bytes + 4))
+            break;
+        buf += info->frame_bytes;
+        music_size -= info->frame_bytes;
+          int i;
+      
+        for(i = p * info->channels; i < num_samples * info->channels; i += 256)
+        {
+            int len = ((num_samples - p) * info->channels * 2 < 512 )? (num_samples - p) * 2 * info->channels : 512;
+            
+            //printf("%d\n", len);
+            kwrite((char*)(music_buf + p * info->channels), len);
+            p += (len/2/info->channels);
 
-        if (sampleRate)
-            *sampleRate = info->hz;
-        if (channels)
-            *channels = info->channels;
-        if (num_samples)
-            *totalSampleCount = num_samples;
-
-        free(file_buf);
-        return music_buf;
+        }
     }
-    if (music_buf)
-        free(music_buf);
-    return 0;
+    int len = (num_samples - p) * 2 * info->channels;
+    kwrite((uchar*)(music_buf + p * info->channels), len);
+    p += (len/2/info->channels);
+
+    if (alloc_samples > num_samples) //shrink the data array
+    {
+        int16_t *new_buf = (int16_t *)malloc(num_samples * 2 * info->channels);
+        if(new_buf)
+        {
+            memcpy(new_buf, music_buf, num_samples * 2 * info->channels);
+            free(music_buf);
+            music_buf = new_buf;
+        }
+    }
+
+    if (sampleRate)
+        *sampleRate = info->hz;
+    if (channels)
+        *channels = info->channels;
+    if (num_samples)
+        *totalSampleCount = num_samples;
+
+    free(file_buf);
+    return music_buf;
+    
+    
 }
 
 // get the name of input file
@@ -236,7 +250,6 @@ int main(int argc, char* argv[])
         printf("Incorrect input!");
         return -1;
     }
-    
     uint32_t totalSampleCount = 0;
     uint32_t sampleRate = 0;
     unsigned int channels = 0;

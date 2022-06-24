@@ -124,6 +124,9 @@ void play_wav(char* filename)
   exit(0);
 }
 
+void play_mp3(char* filename){
+  
+};
 
 int
 main(void)
@@ -132,15 +135,21 @@ main(void)
     printf("Local music list:\n");
     char* input_str;
     int play_wav_pid = -1;
+    show_audioList();
     while (1)
     {
         printf("Enter Command: ");
         input_str = get_input();
         if (startswith(input_str, "play "))
         {
+            char *extensionname,*name;
+            name = input_str + 5;
+            extensionname = name + strlen(name) - 4;
             play_wav_pid = fork();
-            if (play_wav_pid == 0)
+            if (play_wav_pid == 0 && strcmp(extensionname,".wav")==0)
               play_wav(input_str + 5);
+            else if(play_wav_pid == 0 && strcmp(extensionname,".mp3")==0)
+              play_mp3(input_str + 5);
         }
         else if (strcmp(input_str, "stop") == 0)
         {
@@ -160,6 +169,5 @@ main(void)
           set_volume(volume);
         }
     }
-    // show_audioList();
     exit(0);
 }

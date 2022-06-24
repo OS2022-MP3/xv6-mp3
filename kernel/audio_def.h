@@ -1,9 +1,11 @@
 #include "types.h"
-#include "stream.h"
 
 #define DMA_BUF_NUM  32
 #define DMA_SMP_NUM  0x1000
 #define DMA_BUF_SIZE (DMA_SMP_NUM*2)
+
+#define PROCESSED  0x1
+#define PCM_OUT 0x2
 
 struct fmt {
   uint id;
@@ -33,7 +35,4 @@ struct soundNode{
 };
 
 void addSound(struct soundNode *node);
-
-#define PROCESSED  0x1
-#define PCM_OUT 0x2
 
