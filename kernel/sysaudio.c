@@ -119,6 +119,8 @@ sys_kwrite(void)
         return -1;
     either_copyin((void*)buf, 1, (uint64)buffer, size); // to: buf, isUserSpace: 1, from: buffer, bytes: size
 
+    transfer_data();
+
     return 0;
 }
 

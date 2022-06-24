@@ -125,7 +125,8 @@ void play_wav(char* filename)
 }
 
 void play_mp3(char* filename){
-  
+  char *args[] = {"decode", filename};
+  exec("decode", args);
 };
 
 int
@@ -134,7 +135,7 @@ main(void)
     printf("Welcome to the music player!\n");
     printf("Local music list:\n");
     char* input_str;
-    int play_wav_pid = -1;
+    int play_pid = -1;
     show_audioList();
     while (1)
     {
@@ -145,18 +146,17 @@ main(void)
             char *extensionname,*name;
             name = input_str + 5;
             extensionname = name + strlen(name) - 4;
-            play_wav_pid = fork();
-            if (play_wav_pid == 0 && strcmp(extensionname,".wav")==0)
+            play_pid = fork();
+            if (play_pid == 0 && strcmp(extensionname,".wav")==0)
               play_wav(input_str + 5);
-            else if(play_wav_pid == 0 && strcmp(extensionname,".mp3")==0)
+            else if(play_pid == 0 && strcmp(extensionname,".mp3")==0)
               play_mp3(input_str + 5);
         }
         else if (strcmp(input_str, "stop") == 0)
         {
             pause();
-            kill(play_wav_pid);
+            kill(play_pid);
             stop_wav();
-            sleep(10);
         }
         else if (strcmp(input_str, "pause") == 0)
         {
