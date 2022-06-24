@@ -1,9 +1,11 @@
 #include "types.h"
-#include "stream.h"
 
 #define DMA_BUF_NUM  32
 #define DMA_SMP_NUM  0x1000
 #define DMA_BUF_SIZE (DMA_SMP_NUM*2)
+
+#define PROCESSED  0x1
+#define PCM_OUT 0x2
 
 struct fmt {
   uint id;
@@ -25,15 +27,6 @@ struct wav{
   uint dlen;
 };
 
-#define	BUFSIZE	819200
-struct coreBuf{
-	unsigned int buf[BUFSIZE];
-	unsigned int buf_bit_idx;
-	unsigned long offset, totbit, buf_byte_idx;
-	struct frame_params fr_ps;
-	struct III_side_info_t III_side_info;
-};
-
 
 struct soundNode{
   volatile int flag;
@@ -43,6 +36,3 @@ struct soundNode{
 
 void addSound(struct soundNode *node);
 
-#define PROCESSED  0x1
-#define PCM_OUT 0x2
-#define PCM_IN 0x4

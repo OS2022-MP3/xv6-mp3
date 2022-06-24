@@ -27,7 +27,7 @@ int setSampleRate(int);
 int pause();
 int wavdecode();
 int kwrite(void*, int);
-int stop();
+int stop_wav();
 
 // ulib.c
 int stat(const char*, struct stat*);

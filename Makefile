@@ -140,9 +140,8 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_decode\
-	$U/_play\
 	$U/_pause\
-	$U/_player\
+	$U/_player
 
 AUDIOS=\
 	$A/ding.wav\
@@ -151,7 +150,8 @@ AUDIOS=\
 	$A/Ring03.wav\
 	$A/long2.wav\
 	$A/long5.wav\
-	$A/1.mp3
+	$A/1.mp3\
+	$A/ImperialMarch60.wav
 
 fs.img: mkfs/mkfs README $(AUDIOS) $(UPROGS)
 	mkfs/mkfs fs.img README $(AUDIOS) $(UPROGS)
