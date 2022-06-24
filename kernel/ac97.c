@@ -145,6 +145,8 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   uint64 base = (uint64)descriTable ;
   WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
   //printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
+
+  // WriteRegShort(PCIE_PIO | (PCM_OUT_VOLUME), 0);
 }
 
 void soundinit(void) {

@@ -146,6 +146,7 @@ main(void)
     printf("Local music list:\n");
     char* input_str;
     int play_pid = -1;
+    int isPaused = 0;
     show_audioList();
     while (1)
     {
@@ -167,6 +168,7 @@ main(void)
               play_wav(input_str + 5);
             else if(play_pid == 0 && strcmp(extensionname,".mp3")==0)
               play_mp3(input_str + 5);
+            
         }
         else if (strcmp(input_str, "stop") == 0)
         {
@@ -176,7 +178,17 @@ main(void)
         }
         else if (strcmp(input_str, "pause") == 0)
         {
-            pause();
+            if (isPaused == 0) {
+                isPaused = 1;
+                pause();
+            }
+        }
+        else if (strcmp(input_str, "resume") == 0)
+        {
+            if (isPaused == 1) {
+                isPaused = 0;
+                pause();
+            }
         }
         else if (startswith(input_str, "volume "))
         {

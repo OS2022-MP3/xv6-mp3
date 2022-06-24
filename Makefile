@@ -144,18 +144,14 @@ UPROGS=\
 	$U/_player
 
 AUDIOS=\
-	$A/ding.wav\
-	$A/test.mp3\
-	$A/Ring01.wav\
-	$A/Ring03.wav\
-	$A/long2.wav\
+	$A/class.mp3\
 	$A/long5.wav\
 	$A/1.mp3\
-	$A/ImperialMarch60.wav\
-	$A/SummerCozyRock.mp3\
-	$A/summer2.mp3\
+	$A/summer.mp3\
 	$A/1minute.mp3\
-	$A/novia.mp3
+	$A/novia.mp3\
+	$A/15.mp3\
+	$A/haoyunlai.mp3
 
 fs.img: mkfs/mkfs README $(AUDIOS) $(UPROGS)
 	mkfs/mkfs fs.img README $(AUDIOS) $(UPROGS)

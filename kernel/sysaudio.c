@@ -21,6 +21,8 @@ static int bufcount;
 static int size;
 static int ispaused = 0;
 
+static double volume_factor = 0.5;
+
 // lock for soundNode/Volume
 struct snd {
     struct spinlock lock;
@@ -119,6 +121,9 @@ sys_kwrite(void)
         return -1;
     either_copyin((void*)buf, 1, (uint64)buffer, size); // to: buf, isUserSpace: 1, from: buffer, bytes: size
 
+    short* buf_16 = (short*)buf;
+    for (int i=0;i<size/2;i++)
+        buf_16[i] = (short)(buf_16[i] * volume_factor);
     transfer_data();
 
     return 0;
@@ -169,7 +174,16 @@ sys_set_volume(void)
     if (volume < 0 || volume > 100)
         return -1;
     
+    volume_factor = (double)volume / 100;
 
-
+    short* buf_16 = (short*)buf;
+    for (int i=0;i<size/2;i++)
+        buf_16[i] = (short)(buf_16[i] * volume_factor);
+    for (int j=0;j<3;j++)
+    {
+        short* buf_16 = (short*)audiobuf[j].data;
+        for (int i=0;i<sizeof(audiobuf[j].data)/2;i++)
+            buf_16[i] = (short)(buf_16[i] * volume_factor);
+    }
     return 0;
 }
