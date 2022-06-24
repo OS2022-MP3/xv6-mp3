@@ -278,6 +278,14 @@ int main(int argc, char* argv[])
 
     // wavWrite_int16(out_file, wavBuffer, sampleRate, totalSampleCount, channels);
 
+    if(out_file)
+        free(out_file);
+    if(ext)
+        free(ext);
+    if(dir)
+        free(dir);
+    if(fname)
+        free(fname);
     if (wavBuffer)
         free(wavBuffer);
 
