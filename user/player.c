@@ -42,7 +42,7 @@ show_audioList()
     int fd;
     struct dirent de;
     struct stat st;
-    int cnt = 0;
+    int cnt = 0, pos = 0;
     char path[] = ".";
 
     if((fd = open(path, 0)) < 0){
@@ -66,11 +66,16 @@ show_audioList()
         char *extensionname, *name;
         char tmp[] = " ";
         name = buf;
-        if(strlen(name)>4)
-            extensionname = name + strlen(name) - 4;
+        for(pos=1;pos<strlen(name);pos++)
+        {
+          if(name[pos]=='.')
+            break;
+        }
+        if(pos<=2)
+          extensionname = tmp;
         else
-            extensionname = tmp;
-        if(strcmp(extensionname,".mp3")==0  || strcmp(extensionname,".wav")==0 )
+          extensionname = name+pos;
+        if(strcmp(extensionname,".mp3")==0  || strcmp(extensionname,".wav")==0 ||  strcmp(extensionname,".flac")==0)
         {
             printf("%s ", fmtname(name));
             cnt++;
@@ -139,13 +144,18 @@ void play_mp3(char* filename){
   exec("decode", args);
 };
 
+void play_flac(char* filename){
+  char *args[] = {"decode", filename};
+  exec("flac", args);
+};
+
 int
 main(void)
 {
     printf("Welcome to the music player!\n");
     printf("Local music list:\n");
     char* input_str;
-    int play_pid = -1;
+    int play_pid = -1, pos = 0;
     int isPaused = 0;
     show_audioList();
     while (1)
@@ -162,13 +172,19 @@ main(void)
             }
             char *extensionname,*name;
             name = input_str + 5;
-            extensionname = name + strlen(name) - 4;
+            for(pos=1;pos<strlen(name);pos++)
+            {
+              if(name[pos]=='.')
+              break;
+            }
+            extensionname = name+pos;
             play_pid = fork();
             if (play_pid == 0 && strcmp(extensionname,".wav")==0)
               play_wav(input_str + 5);
             else if(play_pid == 0 && strcmp(extensionname,".mp3")==0)
               play_mp3(input_str + 5);
-            
+            else if(play_pid == 0 && strcmp(extensionname,".flac")==0)
+              play_mp3(input_str + 5);  
         }
         else if (strcmp(input_str, "stop") == 0)
         {
