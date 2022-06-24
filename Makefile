@@ -31,7 +31,7 @@ OBJS = \
   $K/plic.o \
   $K/virtio_disk.o\
   $K/ac97.o\
-  $K/sysaudio.o
+  $K/sysaudio.o\
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
@@ -136,7 +136,8 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_decode\
-	$U/_player
+	$U/_player\
+	$U/_flac
 
 AUDIOS=\
 	$A/class.mp3\
@@ -146,7 +147,8 @@ AUDIOS=\
 	$A/1minute.mp3\
 	$A/novia.mp3\
 	$A/15.mp3\
-	$A/haoyunlai.mp3
+	$A/haoyunlai.mp3\
+	$A/bgm.flac
 
 fs.img: mkfs/mkfs README $(AUDIOS) $(UPROGS)
 	mkfs/mkfs fs.img README $(AUDIOS) $(UPROGS)
