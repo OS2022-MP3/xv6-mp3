@@ -12,20 +12,18 @@
 #include "audio_def.h"
 #include "stream.h"
 
+
+// global variables
 static struct soundNode audiobuf[3];
-static struct coreBuf corebuf;
-//static struct layer info;
+static char buf[32768];
 
-int headerInitFlag = 0;
+static int datacount;
+static int bufcount;
+static int size;
+static int isdecoding = 0;
+static int ispaused = 0;
 
-int datacount;
-int bufcount;
-int size;
-int isdecoding = 0;
-int ismp3decoding = 0;
-int ispaused = 0;
-int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
-
+// lock for soundNode/Decode
 struct snd {
     struct spinlock lock;
     uint tag;
@@ -35,42 +33,16 @@ struct decode {
     uint nread;
     uint nwrite;
 };
-
-struct snd sndlock;
-struct decode decodelock, mp3lock;
-
-
-#define ARGBUFSIZE 400000
-unsigned int argBuf[ARGBUFSIZE];
-struct ArgLock {
-    struct spinlock lock;
-    uint nread;
-    uint nwrite;
-};
-struct ArgLock argLock;
-int argBufHead = 0;
-int argBufTail = 0;
-int sizeFRPS = sizeof(struct frame_params);
-int sizeSDIF = sizeof(struct III_side_info_t);
-int sizeLAYE = sizeof(struct layer);
-int totsize = sizeof(struct frame_params) + sizeof(struct III_side_info_t) + sizeof(struct layer);
-
-
-#define IN_OUT 8
-#define BLOCK_SIZE 4096
-int full = 0;
-char buf[32768];
-int inNum = 0;
-int in = 0;
-int out = 0;
+static struct snd sndlock;
+static struct decode decodelock;
 
 
 int sys_setSampleRate(void)
 {
     ispaused = 0;
-    corebuf.buf_bit_idx=8;
-    corebuf.totbit=0;
-    corebuf.buf_byte_idx=0;
+    // corebuf.buf_bit_idx=8;
+    // corebuf.totbit=0;
+    // corebuf.buf_byte_idx=0;
     int rate, i;
     // 获取系统的第0个参数
     if (argint(0, &rate) < 0)
@@ -98,7 +70,6 @@ sys_wavdecode(void)
     {
 	   sleep(&decodelock.nread, &decodelock.lock);
     }
-    // printf("Wav Decode\n");
     release(&decodelock.lock);
     if (datacount == 0)
         memset(&audiobuf[bufcount], 0, sizeof(struct soundNode));
@@ -196,10 +167,25 @@ sys_pause(void)
     return 0;
 }
 
+
 int
-sys_stop(void)
+sys_stop_wav(void)
 {
-    ispaused = 1;
+    memset(&sndlock, 0, sizeof(sndlock));
+    memset(&decodelock, 0, sizeof(decodelock));
+
+    for (int i=0;i<3;i++)
+    {
+        audiobuf[i].flag = 0;
+        audiobuf[i].next = 0;
+    }
+
+
+    memset(buf, 0, sizeof(buf));
+    datacount = bufcount = size = isdecoding = ispaused = 0;
+
     ac97_stop();
+    printf("AC97 Reset\n");
+
     return 0;
 }
