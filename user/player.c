@@ -184,7 +184,7 @@ main(void)
             else if(play_pid == 0 && strcmp(extensionname,".mp3")==0)
               play_mp3(input_str + 5);
             else if(play_pid == 0 && strcmp(extensionname,".flac")==0)
-              play_mp3(input_str + 5);  
+              play_flac(input_str + 5);  
         }
         else if (strcmp(input_str, "stop") == 0)
         {
