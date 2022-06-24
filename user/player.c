@@ -168,6 +168,8 @@ main(void)
           printf("%d\n", volume);
           set_volume(volume);
         }
+        else if (startswith(input_str, "exit"))
+          break;
     }
     exit(0);
 }
