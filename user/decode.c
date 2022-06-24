@@ -160,11 +160,16 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
             break;
         buf += info->frame_bytes;
         music_size -= info->frame_bytes;
-        int i;
+          int i;
+      
         for(i = p * info->channels; i < num_samples * info->channels; i += 256)
         {
+            int len = ((num_samples - p) * info->channels * 2 < 512 )? (num_samples - p) * 2 * info->channels : 512;
             
-            //printf("%d\n", p);
+            //printf("%d\n", len);
+            kwrite((char*)(music_buf + p * info->channels), len);
+            p += (len/2/info->channels);
+
         }
     }
     int len = (num_samples - p) * 2 * info->channels;
@@ -245,15 +250,6 @@ int main(int argc, char* argv[])
         printf("Incorrect input!");
         return -1;
     }
-    int decodepid = fork();
-    {
-        if(decodepid == 0)
-        {
-        while(1)
-            wavdecode();
-        exit(0);
-        }
-    }
     uint32_t totalSampleCount = 0;
     uint32_t sampleRate = 0;
     unsigned int channels = 0;
@@ -286,6 +282,5 @@ int main(int argc, char* argv[])
         free(wavBuffer);
 
     printf("Finished!\n");
-    //kill(decodepid);
     exit(0);
 }
