@@ -35,10 +35,6 @@ uint16 nabmba; // native audio bus mastering base address
 #define PO_LVI nabmba + 0x15//PCM Out Last Valid Index 
 #define PO_SR nabmba + 0x16//PCM Out Status Register
 #define PO_CR nabmba + 0x1B //PCM Out Control Register
-#define MC_BDBAR nabmba + 0x20//Mic. In Buffer Descriptor list Base Address Register
-#define MC_LVI nabmba + 0x25//Mic. In Last Valid Index
-#define MC_SR nabmba + 0x26//Mic. In Status Register
-#define MC_CR nabmba + 0x2B//Mic. In Control Register
 
 #define FOR(i, a, b) for (uint32 i = (a), i##_END_ = (b); i <= i##_END_; ++i)
 
@@ -147,42 +143,6 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
   //printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
 
-  // test();
-}
-
-uchar temp[DMA_BUF_SIZE*DMA_BUF_NUM];
-void test()
-{
-  struct spinlock t;
-  initlock(&t, "sud");
-  setSoundSampleRate(44100);
-  //while(1)
-  {
-  acquire(&t);
-  for (int j = 1; j < DMA_BUF_SIZE*DMA_BUF_NUM; j++)
-  {
-      temp[j] = (temp[j-1]+1)%256;
-  }
-  for (int i = 0; i < DMA_BUF_NUM; i++)
-    {
-        descriTable[i].buf = (uint64)(temp + i * DMA_BUF_SIZE);
-        descriTable[i].cmd_len = 0x80000000 + DMA_SMP_NUM;
-    }
-    
-        //init last valid index
-        WriteRegByte(PCIE_PIO | (PO_LVI), 0x1F);
-        //init control register
-        //run audio
-        //enable interrupt
-        WriteRegByte(PCIE_PIO | (PO_CR), (0x05) | (1 << 3));
-        // printf("play");
-    
-    release(&t);
-  }
-  // while (1) {
-  //   for(int i=0;i<3000000;i++);
-  //   printf("CVI: %x\n", ReadRegByte(PCIE_PIO | (nabmba + 0x14)));
-  // }
 }
 
 void soundinit(void) {
@@ -192,7 +152,7 @@ void soundinit(void) {
     uint32 vendor = res & 0xffff;
     uint32 device = (res >> 16) & 0xffff;
     if (vendor == 0x8086 && device == 0x2415) {
-      printf("AC97 found!\n");
+      // printf("AC97 found!\n");
       soundcard_init(bus, slot, func);
       return;
     }
@@ -205,6 +165,7 @@ void setSoundSampleRate(uint samplerate)
     //Control Register --> 0x00
     //pause audio
     //disable interrupt
+    // samplerate /= 2;
     WriteRegByte(PCIE_PIO | (PO_CR), 0x00);
 
     //PCM Front DAC Rate
@@ -217,10 +178,7 @@ void setSoundSampleRate(uint samplerate)
 
 void soundInterrupt(void)
 {
-  // printf("soundInterrupt\n");
     int i;
-    // if(soundQueue == 0)
-    //   return;//临时debug写的 6.20
 
     acquire(&sound_lock);
 
@@ -234,17 +192,8 @@ void soundInterrupt(void)
     //0 sound file left
     if (soundQueue == 0)
     {
-      // printf("0 Sound\n");
-        if ((flag & PCM_OUT) == PCM_OUT)
-        {
-            ushort sr = ReadRegShort(PCIE_PIO | (PO_SR));
-            WriteRegShort(PCIE_PIO | (PO_SR), sr);
-        }
-        else if ((flag & PCM_IN) == PCM_IN)
-        {
-            ushort sr = ReadRegShort(PCIE_PIO | (MC_SR));
-            WriteRegShort(PCIE_PIO | (MC_SR), sr);
-        }
+        ushort sr = ReadRegShort(PCIE_PIO | (PO_SR));
+        WriteRegShort(PCIE_PIO | (PO_SR), sr);
         release(&sound_lock);
         return;
     }
@@ -286,8 +235,6 @@ void playSound(void)
     //开始播放: PCM_OUT
     if ((soundQueue->flag & PCM_OUT) == PCM_OUT)
     {
-        //init base register
-        //WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((uint64)(&base) & 0xffffffff));
         //init last valid index
         WriteRegByte(PCIE_PIO | (PO_LVI), 0x1F);
         //init control register
@@ -301,12 +248,6 @@ void playSound(void)
 //add sound-piece to the end of queue
 void addSound(struct soundNode *node)
 {   
-  // printf("Add Sound\n");
-    // for(int i=0;i<DMA_BUF_NUM*DMA_BUF_SIZE;i++)
-    //   if (node->data[i] != 0)
-    //     printf("Non-Zero: %d\n", i);
-  
-
     struct soundNode **ptr;
 
     acquire(&sound_lock);
@@ -318,11 +259,8 @@ void addSound(struct soundNode *node)
 
     //node is already the first
     //play sound
-    //printf("soundQueue == node: %d\n", (soundQueue == node));
     if (soundQueue == node)
-    {
         playSound();
-    }
 
     release(&sound_lock);
 }
@@ -330,18 +268,23 @@ void addSound(struct soundNode *node)
 void ac97_pause(int isPaused)
 {
   if (isPaused == 1)
-  {
     WriteRegByte(PCIE_PIO | (PO_CR), 0);
-  }
   else
-  {
     WriteRegByte(PCIE_PIO | (PO_CR), 0x05);
-  }
 }
 
 void ac97_stop()
 {
+  soundQueue = 0;
+  // memset(&sound_lock, 0, sizeof(sound_lock));
+
+
   WriteRegByte(PCIE_PIO | (PO_CR), 0);
-  WriteRegByte(PCIE_PIO | (PO_CR), 0x04);
-  WriteRegByte(PCIE_PIO | (PO_CR), 0);
+  while (ReadRegByte(PCIE_PIO | (PO_CR)) != 0);
+  WriteRegByte(PCIE_PIO | (PO_CR), 0x02);
+  while (ReadRegByte(PCIE_PIO | (PO_CR)) != 0);
+
+  memset(descriTable, 0, sizeof(descriTable));
+  uint64 base = (uint64)descriTable;
+  WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
 }

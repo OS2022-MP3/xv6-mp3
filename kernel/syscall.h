@@ -24,4 +24,4 @@
 #define SYS_kwrite 23
 #define SYS_pause 24
 #define SYS_wavdecode 25
-#define SYS_stop 26
+#define SYS_stop_wav 26

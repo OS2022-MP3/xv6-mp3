@@ -20,7 +20,6 @@ static char buf[32768];
 static int datacount;
 static int bufcount;
 static int size;
-static int isdecoding = 0;
 static int ispaused = 0;
 
 // lock for soundNode/Decode
@@ -28,21 +27,11 @@ struct snd {
     struct spinlock lock;
     uint tag;
 };
-struct decode {
-    struct spinlock lock;
-    uint nread;
-    uint nwrite;
-};
 static struct snd sndlock;
-static struct decode decodelock;
 
 
 int sys_setSampleRate(void)
 {
-    ispaused = 0;
-    // corebuf.buf_bit_idx=8;
-    // corebuf.totbit=0;
-    // corebuf.buf_byte_idx=0;
     int rate, i;
     // 获取系统的第0个参数
     if (argint(0, &rate) < 0)
@@ -55,7 +44,7 @@ int sys_setSampleRate(void)
         memset(&audiobuf[i], 0, sizeof(struct soundNode));
         audiobuf[i].flag = PROCESSED;
     }
-    // audio.c设置采样率
+    // ac97设置采样率
     setSoundSampleRate(rate);
     return 0;
 }
@@ -65,12 +54,6 @@ sys_wavdecode(void)
 {
     //soundNode的数据大小
     int bufsize = DMA_BUF_NUM*DMA_BUF_SIZE;
-    acquire(&decodelock.lock);
-    while (isdecoding == 0)
-    {
-	   sleep(&decodelock.nread, &decodelock.lock);
-    }
-    release(&decodelock.lock);
     if (datacount == 0)
         memset(&audiobuf[bufcount], 0, sizeof(struct soundNode));
     //若soundNode的剩余大小大于数据大小，将数据写入soundNode中
@@ -82,14 +65,8 @@ sys_wavdecode(void)
     }
     else
     {
-        int temp = bufsize - datacount,i;
         //soundNode存满后调用audioplay进行播放
-    	acquire(&sndlock.lock);
-    	while (ispaused == 1)
-    	{
-    		sleep(&sndlock.tag, &sndlock.lock);
-    	}
-    	release(&sndlock.lock);
+        int temp = bufsize - datacount,i;
         memmove(&audiobuf[bufcount].data[datacount], buf, temp);
         audiobuf[bufcount].flag = PCM_OUT;
         addSound(&audiobuf[bufcount]);
@@ -122,30 +99,24 @@ sys_wavdecode(void)
             }
         }
     }
-    acquire(&decodelock.lock);
-    isdecoding = 0;
-    wakeup(&decodelock.nwrite);
-    release(&decodelock.lock);
     return 0;
 }
 
 int
 sys_kwrite(void)
 {
+    // paused? sleep
+    acquire(&sndlock.lock);
+    if (ispaused == 1)
+        sleep(&sndlock.tag, &sndlock.lock);
+    release(&sndlock.lock);
+
+    // read PCM data from user space
     char *buffer;
-    //获取待播放的数据和数据大小
-    acquire(&decodelock.lock);
-    while (isdecoding) {
- 	  sleep(&decodelock.nwrite, &decodelock.lock);
-    }
     if (argint(1, &size) < 0 || argptr(0, &buffer, size) < 0)
         return -1;
-    // memmove(buf, buffer, size);
     either_copyin((void*)buf, 1, (uint64)buffer, size); // to: buf, isUserSpace: 1, from: buffer, bytes: size
-    isdecoding = 1;
-    // printf("%d\n", ret);
-    wakeup(&decodelock.nread);
-    release(&decodelock.lock);
+    sys_wavdecode();
     return 0;
 }
 
@@ -154,8 +125,10 @@ sys_pause(void)
 {
     sndlock.tag = 0;
     if (ispaused == 0) {
-	   ispaused = 1;
-       ac97_pause(ispaused);
+        acquire(&sndlock.lock);
+	    ispaused = 1;
+        ac97_pause(ispaused);
+        release(&sndlock.lock);
     }
     else {
     	acquire(&sndlock.lock);
@@ -171,21 +144,14 @@ sys_pause(void)
 int
 sys_stop_wav(void)
 {
-    memset(&sndlock, 0, sizeof(sndlock));
-    memset(&decodelock, 0, sizeof(decodelock));
-
     for (int i=0;i<3;i++)
     {
         audiobuf[i].flag = 0;
         audiobuf[i].next = 0;
     }
-
-
-    memset(buf, 0, sizeof(buf));
-    datacount = bufcount = size = isdecoding = ispaused = 0;
+    datacount = bufcount = ispaused = 0;
 
     ac97_stop();
-    printf("AC97 Reset\n");
 
     return 0;
 }
