@@ -10,7 +10,6 @@
 #include "fs.h"
 #include "buf.h"
 #include "audio_def.h"
-#include "stream.h"
 
 
 // global variables
