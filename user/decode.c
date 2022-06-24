@@ -276,11 +276,11 @@ int main(int argc, char* argv[])
     out_file[p++] = '.', out_file[p++] = 'w', out_file[p++] = 'a',
     out_file[p++] = 'v', out_file[p++] = '\0';
 
-    wavWrite_int16(out_file, wavBuffer, sampleRate, totalSampleCount, channels);
+    // wavWrite_int16(out_file, wavBuffer, sampleRate, totalSampleCount, channels);
 
     if (wavBuffer)
         free(wavBuffer);
 
-    printf("Finished!\n");
+    // printf("Finished!\n");
     exit(0);
 }

@@ -151,7 +151,11 @@ AUDIOS=\
 	$A/long2.wav\
 	$A/long5.wav\
 	$A/1.mp3\
-	$A/ImperialMarch60.wav
+	$A/ImperialMarch60.wav\
+	$A/SummerCozyRock.mp3\
+	$A/summer2.mp3\
+	$A/1minute.mp3\
+	$A/novia.mp3
 
 fs.img: mkfs/mkfs README $(AUDIOS) $(UPROGS)
 	mkfs/mkfs fs.img README $(AUDIOS) $(UPROGS)
