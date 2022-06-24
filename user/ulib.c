@@ -134,3 +134,14 @@ memcpy(void *dst, const void *src, uint n)
 {
   return memmove(dst, src, n);
 }
+
+int parseInt(char* str)
+{
+  int res = 0;
+  while(*str >= '0' && *str <= '9') 
+  {
+    res = res * 10 + ((*str) - '0');
+    str++;
+  }
+  return res;
+}

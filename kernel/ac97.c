@@ -29,6 +29,9 @@ uint16 nabmba; // native audio bus mastering base address
 #define SURROUND_DAC_RATE namba + 0x2E
 #define LFE_DAC_RATE namba + 0x30
 
+#define MASTER_VOLUME namba + 0x02
+#define PCM_OUT_VOLUME namba + 0x18
+
 #define NABMBA_GLOB_CNT nabmba + 0x2C
 #define NABMBA_GLOB_STA nabmba + 0x30
 #define PO_BDBAR nabmba + 0x10//PCM Out Buffer Descriptor list Base Address Register 
@@ -142,7 +145,6 @@ void soundcard_init(uint32 bus, uint32 slot, uint32 func) {
   uint64 base = (uint64)descriTable ;
   WriteRegInt(PCIE_PIO | (PO_BDBAR), (uint32)((base) & 0xffffffff));
   //printf("%x\n", ReadRegInt(PCIE_PIO | (PO_BDBAR)) - 0x80000000L);
-
 }
 
 void soundinit(void) {

@@ -23,5 +23,5 @@
 #define SYS_setSampleRate 22
 #define SYS_kwrite 23
 #define SYS_pause 24
-#define SYS_wavdecode 25
+#define SYS_set_volume 25
 #define SYS_stop_wav 26

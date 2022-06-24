@@ -22,7 +22,7 @@ static int bufcount;
 static int size;
 static int ispaused = 0;
 
-// lock for soundNode/Decode
+// lock for soundNode/Volume
 struct snd {
     struct spinlock lock;
     uint tag;
@@ -50,7 +50,7 @@ int sys_setSampleRate(void)
 }
 
 int
-sys_wavdecode(void)
+transfer_data(void)
 {
     //soundNode的数据大小
     int bufsize = DMA_BUF_NUM*DMA_BUF_SIZE;
@@ -81,7 +81,7 @@ sys_wavdecode(void)
                     memset(&audiobuf[i], 0, sizeof(struct soundNode));
                     if (bufsize > size - temp)
                     {
-                        memmove(&audiobuf[i].data[0], (buf +temp), (size-temp));
+                        memmove(&audiobuf[i].data[0], (buf + temp), (size - temp));
                         audiobuf[i].flag = PCM_OUT | PROCESSED;
                         datacount = size - temp;
                         bufcount = i;
@@ -102,6 +102,8 @@ sys_wavdecode(void)
     return 0;
 }
 
+
+
 int
 sys_kwrite(void)
 {
@@ -111,12 +113,13 @@ sys_kwrite(void)
         sleep(&sndlock.tag, &sndlock.lock);
     release(&sndlock.lock);
 
+
     // read PCM data from user space
     char *buffer;
     if (argint(1, &size) < 0 || argptr(0, &buffer, size) < 0)
         return -1;
     either_copyin((void*)buf, 1, (uint64)buffer, size); // to: buf, isUserSpace: 1, from: buffer, bytes: size
-    sys_wavdecode();
+
     return 0;
 }
 
@@ -152,6 +155,20 @@ sys_stop_wav(void)
     datacount = bufcount = ispaused = 0;
 
     ac97_stop();
+
+    return 0;
+}
+
+int 
+sys_set_volume(void)
+{
+    int volume;
+    if (argint(0, &volume) < 0)
+        return -1;
+    if (volume < 0 || volume > 100)
+        return -1;
+    
+
 
     return 0;
 }

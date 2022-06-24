@@ -153,6 +153,12 @@ main(void)
         {
             pause();
         }
+        else if (startswith(input_str, "volume "))
+        {
+          int volume = parseInt(input_str + 7);
+          printf("%d\n", volume);
+          set_volume(volume);
+        }
     }
     // show_audioList();
     exit(0);

@@ -28,6 +28,7 @@ int pause();
 int wavdecode();
 int kwrite(void*, int);
 int stop_wav();
+int set_volume(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -45,3 +46,4 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+int parseInt(char*);
