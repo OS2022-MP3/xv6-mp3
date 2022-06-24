@@ -143,6 +143,12 @@ main(void)
         input_str = get_input();
         if (startswith(input_str, "play "))
         {
+            if (play_pid != -1)
+            {
+                pause();
+                kill(play_pid);
+                stop_wav();
+            }
             char *extensionname,*name;
             name = input_str + 5;
             extensionname = name + strlen(name) - 4;
