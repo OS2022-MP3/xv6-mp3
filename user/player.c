@@ -42,6 +42,7 @@ show_audioList()
     int fd;
     struct dirent de;
     struct stat st;
+    int cnt = 0;
     char path[] = ".";
 
     if((fd = open(path, 0)) < 0){
@@ -70,8 +71,17 @@ show_audioList()
         else
             extensionname = tmp;
         if(strcmp(extensionname,".mp3")==0  || strcmp(extensionname,".wav")==0 )
-            printf("%s\n", fmtname(name));
+        {
+            printf("%s ", fmtname(name));
+            cnt++;
+            if(cnt==4)
+            {
+              cnt=0;
+              printf("\n");
+            }
+        }
     }
+    printf("\n");
     close(fd);
 }
 
@@ -168,6 +178,8 @@ main(void)
           printf("%d\n", volume);
           set_volume(volume);
         }
+        else if (startswith(input_str, "list"))
+          show_audioList();
         else if (startswith(input_str, "exit"))
           break;
     }
