@@ -117,7 +117,7 @@ int main(int argc, const char* argv[]) {
         if(res != MINIFLAC_OK) break;
     }
 
-    printf("finished\n");
+    // printf("finished\n");
 
     for(i=0;i<8;i++) {
         free(samples[i]);
