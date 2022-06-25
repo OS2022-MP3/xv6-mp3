@@ -58,6 +58,10 @@ int main(int argc, const char* argv[]) {
         exit(0);
     }    
     mem.buffer = (uint8_t*)getFileBuffer(argv[1],&mem.len);
+    if(mem.buffer == NULL){
+        printf("cannot open the file\n");
+        exit(0);
+    }
     mem.pos = 0;
     decoder = malloc(miniflac_size());
 
@@ -117,11 +121,14 @@ int main(int argc, const char* argv[]) {
         if(res != MINIFLAC_OK) break;
     }
 
-    // printf("finished\n");
-
-    for(i=0;i<8;i++) {
+    for(i=0;i<8;i++) {if(samples[i])
         free(samples[i]);
     }
-    free(samples);
+    if(samples)
+        free(samples);
+    if(outSamples)
+        free(outSamples);
+    if(decoder)
+        free(decoder);
     exit(0);
 }
