@@ -1,13 +1,15 @@
-#ifndef MINIMP3_H
-#define MINIMP3_H
-#include "kernel/types.h"
-#include "user/user.h"
 /*
-    https://github.com/lieff/minimp3
+    REFER TO: https://github.com/lieff/minimp3
+
     To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide.
     This software is distributed without any warranty.
     See <http://creativecommons.org/publicdomain/zero/1.0/>.
 */
+#ifndef MINIMP3_H
+#define MINIMP3_H
+#include "kernel/types.h"
+#include "user/user.h"
+
 typedef signed char        int8_t;
 typedef short              int16_t;
 typedef int                int32_t;

@@ -1,45 +1,13 @@
-// REF: https://github.com/lieff/minimp3/blob/master/minimp3.h
-//      http://tntmonks.cnblogs.com/
-
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
 #include "kernel/fs.h"
 #include "kernel/fcntl.h"
 
-typedef signed char        int8_t;
-typedef short              int16_t;
-typedef int                int32_t;
-typedef long long          int64_t;
-typedef unsigned char      uint8_t;
-typedef unsigned short     uint16_t;
-typedef unsigned int       uint32_t;
-typedef unsigned long long uint64_t;
-
-typedef signed char        int_least8_t;
-typedef short              int_least16_t;
-typedef int                int_least32_t;
-typedef long long          int_least64_t;
-typedef unsigned char      uint_least8_t;
-typedef unsigned short     uint_least16_t;
-typedef unsigned int       uint_least32_t;
-typedef unsigned long long uint_least64_t;
-
-typedef signed char        int_fast8_t;
-typedef int                int_fast16_t;
-typedef int                int_fast32_t;
-typedef long long          int_fast64_t;
-typedef unsigned char      uint_fast8_t;
-typedef unsigned int       uint_fast16_t;
-typedef unsigned int       uint_fast32_t;
-typedef unsigned long long uint_fast64_t;
-
-typedef long long          intmax_t;
-typedef unsigned long long uintmax_t;
-
 #define MINIMP3_IMPLEMENTATION
 #include "mp3.h"
 
+#define abort(STR) {printf("%s\n",STR);exit(0);}
 
 // write a wav file
 void wavWrite_int16(char* filename, int16_t* buffer, int sampleRate, uint32_t totalSampleCount, int channels) {
@@ -93,11 +61,13 @@ char* getFileBuffer(const char* fname, int* size)
     struct stat st;
     char* file_buf = 0;
     if (fstat(fd, &st) < 0)
-        goto doexit;
+    {
+        close(fd);
+        return file_buf;
+    }
     file_buf = (char*)malloc(st.size + 1);
     if (file_buf != 0)
     {
-        // printf("%x\n", (uint64)file_buf);
         if(read(fd, file_buf, st.size)<0)
         {
             close(fd);
@@ -105,10 +75,8 @@ char* getFileBuffer(const char* fname, int* size)
         }
         file_buf[st.size] = 0;
     }
-
     if (size)
         *size = st.size;
-doexit:
     close(fd);
     return file_buf;
 }
@@ -116,30 +84,31 @@ doexit:
 // decode mp3 to PCM data
 int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* totalSampleCount, unsigned int* channels)
 {
-    //setSampleRate(44100);
+    if(filename == 0|| sampleRate ==0 || totalSampleCount == 0 || channels==0)
+        return 0;
     int music_size = 0;
     int alloc_samples = 1024, num_samples = 0;
-    int16_t* music_buf = (int16_t*)malloc(alloc_samples * 2 * 2);
-    unsigned char* file_buf = (unsigned char*)getFileBuffer(filename, &music_size);
+    int16_t* music_buf = 0;
+    unsigned char* file_buf = 0;
+    unsigned char* buf = 0;
     int p = 0;
-    if (file_buf == 0)
-    {
-        if (music_buf)
-        free(music_buf);
-        return 0;
-    }
-    unsigned char* buf = file_buf;
     int i, len = 0;
+    mp3dec_frame_info_t *info = 0;
+    mp3dec_t * dec = 0;
+    
+    music_buf = (int16_t*)malloc(alloc_samples * 2 * 2);
+    file_buf = (unsigned char*)getFileBuffer(filename, &music_size);
+    buf = file_buf;
 
-    // declared in "minimp3.h"
-    mp3dec_frame_info_t *info=malloc(sizeof(mp3dec_frame_info_t));
-    mp3dec_t *dec=malloc(sizeof(mp3dec_t ));
+    info=malloc(sizeof(mp3dec_frame_info_t));
+    dec=malloc(sizeof(mp3dec_t ));
+    if(music_buf == 0||file_buf == 0 || info == 0 || dec == 0)goto clear;
     mp3dec_init(dec);
 
     while(1)
     {
         int16_t *frame_buf=malloc(2 * 1152* sizeof(int16_t));
-            // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
+        // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
         int samples = mp3dec_decode_frame(dec, buf, music_size, frame_buf, info);
         if(*sampleRate == 0)
         {
@@ -152,6 +121,7 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
             alloc_samples *= 2;
 
             int16_t *new_buf = (int16_t *)malloc(alloc_samples * 2 * info->channels);
+            if(new_buf == 0)goto clear;
             if(new_buf)
             {
                 memcpy(new_buf, music_buf, alloc_samples * info->channels);
@@ -180,6 +150,7 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
     if (alloc_samples > num_samples) //shrink the data array
     {
         int16_t *new_buf = (int16_t *)malloc(num_samples * 2 * info->channels);
+        if(new_buf == 0)goto clear;
         if(new_buf)
         {
             memcpy(new_buf, music_buf, num_samples * 2 * info->channels);
@@ -194,11 +165,14 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
         *channels = info->channels;
     if (num_samples)
         *totalSampleCount = num_samples;
-
-    free(file_buf);
+clear:
+    if(info)
+        free(info);
+    if(file_buf)
+        free(file_buf);
+    if(dec)
+        free(dec);
     return music_buf;
-    
-    
 }
 
 
@@ -214,31 +188,18 @@ int main(int argc, char* argv[])
     uint32_t sampleRate = 0;
     unsigned int channels = 0;
     int16_t* wavBuffer = 0;
-    char drive[3];
     char *dir=malloc(256);
     char *fname=malloc(256);
     char *ext=malloc(256);
-    char *out_file=malloc(1024);
-
+    //char *out_file=malloc(1024);
+    if(dir == 0 || fname == 0 ||ext == 0 )abort("Malloc error!");
 
     char *in_file = argv[1];
     wavBuffer = DecodeMp3ToBuffer(in_file, &sampleRate, &totalSampleCount, &channels);
-
-    
-    int p = 0;
-    for (int i = 0; i < strlen(drive); i++)
-        out_file[p++] = drive[i];
-    for (int i = 0; i < strlen(dir); i++)
-        out_file[p++] = dir[i];
-    for (int i = 0; i < strlen(fname); i++)
-        out_file[p++] = fname[i];
-    out_file[p++] = '.', out_file[p++] = 'w', out_file[p++] = 'a',
-    out_file[p++] = 'v', out_file[p++] = '\0';
-
+    if(wavBuffer == 0)  abort("Malloc error!");
     // wavWrite_int16(out_file, wavBuffer, sampleRate, totalSampleCount, channels);
 
-    if(out_file)
-        free(out_file);
+    //if(out_file)free(out_file);
     if(ext)
         free(ext);
     if(dir)
@@ -248,6 +209,5 @@ int main(int argc, char* argv[])
     if (wavBuffer)
         free(wavBuffer);
 
-    // printf("Finished!\n");
     exit(0);
 }

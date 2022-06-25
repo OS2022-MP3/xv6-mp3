@@ -6,6 +6,10 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 #include "kernel/fcntl.h"
+
+
+#define abort(STR) {printf("%s\n",STR);exit(0);}
+
 char* getFileBuffer(const char* fname, int* size)
 {
     int fd = open(fname, O_RDONLY);
@@ -15,11 +19,10 @@ char* getFileBuffer(const char* fname, int* size)
     struct stat st;
     char* file_buf = 0;
     if (fstat(fd, &st) < 0)
-        goto doexit;
+        return 0;
     file_buf = (char*)malloc(st.size + 1);
     if (file_buf != 0)
     {
-        // printf("%x\n", (uint64)file_buf);
         if(read(fd, file_buf, st.size)<0)
         {
             close(fd);
@@ -30,7 +33,6 @@ char* getFileBuffer(const char* fname, int* size)
 
     if (size)
         *size = st.size;
-doexit:
     close(fd);
     return file_buf;
 }
@@ -53,44 +55,37 @@ int main(int argc, const char* argv[]) {
 
     membuffer_t mem;
 
-    if(argc < 2) {
-        printf("incorrect input\n");
-        exit(0);
-    }    
+    if(argc < 2) abort("Incorrect input!");
+
     mem.buffer = (uint8_t*)getFileBuffer(argv[1],&mem.len);
-    if(mem.buffer == NULL){
-        printf("cannot open the file\n");
-        exit(0);
-    }
+    if(mem.buffer == 0) abort("Fail to open the file!");
+
     mem.pos = 0;
     decoder = malloc(miniflac_size());
+    if(mem.buffer == 0) abort("Malloc error!");
 
     samples = (int32_t **)malloc(sizeof(int32_t *) * 8);
+    if(samples == 0) abort("Malloc error!");
+
     for(i=0;i<8;i++) {
         samples[i] = (int32_t *)malloc(sizeof(int32_t) * 65535);
+        if(samples[i] == 0) abort("Malloc error!");
     }
     outSamples = (uint8_t*)malloc(sizeof(int32_t) * 8 * 65535);
+    if(outSamples == 0) abort("Malloc error!");
 
     miniflac_init(decoder, MINIFLAC_CONTAINER_UNKNOWN);
-    //printf("%d %d\n",decoder->frame.header.sample_rate,decoder->frame.header.sample_rate_raw);
     if(miniflac_sync(decoder,&mem.buffer[mem.pos],mem.len,&used) != MINIFLAC_OK) printf("err");
     mem.len -= used;
     mem.pos += used;
     
-    //setSampleRate(44100);
     while(decoder->state == MINIFLAC_METADATA) {
-    /*     printf("metadata block: type: %u, is_last: %u, length: %u\n",
-          decoder->metadata.header.type_raw,
-          decoder->metadata.header.is_last,
-          decoder->metadata.header.length);
-         */
         if(miniflac_sync(decoder,&mem.buffer[mem.pos],mem.len,&used) != MINIFLAC_OK) printf("err");
         mem.len -= used;
         mem.pos += used;
     }
     int sampleRate = 0;
     while( (res = miniflac_decode(decoder,&mem.buffer[mem.pos],mem.len,&used,samples)) == MINIFLAC_OK) {
-            //printf("%d %d\n",decoder->frame.header.sample_rate);
         if(sampleRate == 0)
         {
             sampleRate = decoder->frame.header.sample_rate;
@@ -111,11 +106,7 @@ int main(int argc, const char* argv[]) {
             sampSize = 3; pack = int24_packer; shift = 24 - decoder->frame.header.bps;
         } else if(decoder->frame.header.bps <= 32) {
             sampSize = 4; pack = int32_packer; shift = 32 - decoder->frame.header.bps;
-        } else  {
-            //abort();
-            printf("bps fault!");
-            exit(0);
-        }
+        } else abort("Not supported format!");
 
         len = sampSize * decoder->frame.header.channels * decoder->frame.header.block_size;
 
@@ -130,11 +121,17 @@ int main(int argc, const char* argv[]) {
         if(res != MINIFLAC_OK) break;
     }
 
-    for(i=0;i<8;i++) {if(samples[i])
+    for(i=0;i<8;i++) {
         free(samples[i]);
     }
     if(samples)
+    {
+        for(i=0;i<8;i++) {
+            if(samples[i])
+                free(samples[i]);
+        }
         free(samples);
+    }
     if(outSamples)
         free(outSamples);
     if(decoder)
