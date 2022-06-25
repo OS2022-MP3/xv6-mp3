@@ -145,13 +145,13 @@ void play_wav(char *filename)
 
 void play_mp3(char *filename)
 {
-    char *args[] = {"decode", filename};
-    exec("decode", args);
+    char *args[] = {"mp3", filename};
+    exec("mp3", args);
 };
 
 void play_flac(char *filename)
 {
-    char *args[] = {"decode", filename};
+    char *args[] = {"flac", filename};
     exec("flac", args);
 };
 

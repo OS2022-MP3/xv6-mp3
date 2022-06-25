@@ -72,11 +72,12 @@ int main(int argc, const char* argv[]) {
     outSamples = (uint8_t*)malloc(sizeof(int32_t) * 8 * 65535);
 
     miniflac_init(decoder, MINIFLAC_CONTAINER_UNKNOWN);
+    //printf("%d %d\n",decoder->frame.header.sample_rate,decoder->frame.header.sample_rate_raw);
     if(miniflac_sync(decoder,&mem.buffer[mem.pos],mem.len,&used) != MINIFLAC_OK) printf("err");
     mem.len -= used;
     mem.pos += used;
     
-    setSampleRate(44100);
+    //setSampleRate(44100);
     while(decoder->state == MINIFLAC_METADATA) {
     /*     printf("metadata block: type: %u, is_last: %u, length: %u\n",
           decoder->metadata.header.type_raw,
@@ -87,8 +88,14 @@ int main(int argc, const char* argv[]) {
         mem.len -= used;
         mem.pos += used;
     }
-
+    int sampleRate = 0;
     while( (res = miniflac_decode(decoder,&mem.buffer[mem.pos],mem.len,&used,samples)) == MINIFLAC_OK) {
+            //printf("%d %d\n",decoder->frame.header.sample_rate);
+        if(sampleRate == 0)
+        {
+            sampleRate = decoder->frame.header.sample_rate;
+            setSampleRate(sampleRate);
+        }
         mem.len -= used;
         mem.pos += used;
         len = 0;
@@ -106,6 +113,8 @@ int main(int argc, const char* argv[]) {
             sampSize = 4; pack = int32_packer; shift = 32 - decoder->frame.header.bps;
         } else  {
             //abort();
+            printf("bps fault!");
+            exit(0);
         }
 
         len = sampSize * decoder->frame.header.channels * decoder->frame.header.block_size;

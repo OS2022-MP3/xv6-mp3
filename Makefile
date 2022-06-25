@@ -53,7 +53,7 @@ endif
 
 QEMU = qemu-system-riscv64
 
-CC = $(TOOLPREFIX)gcc -O0
+CC = $(TOOLPREFIX)gcc
 AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
@@ -135,7 +135,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
-	$U/_decode\
+	$U/_mp3\
 	$U/_player\
 	$U/_flac
 

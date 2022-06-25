@@ -38,7 +38,7 @@ typedef long long          intmax_t;
 typedef unsigned long long uintmax_t;
 
 #define MINIMP3_IMPLEMENTATION
-#include "decode.h"
+#include "mp3.h"
 
 
 // write a wav file
@@ -116,7 +116,7 @@ doexit:
 // decode mp3 to PCM data
 int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* totalSampleCount, unsigned int* channels)
 {
-    setSampleRate(44100);
+    //setSampleRate(44100);
     int music_size = 0;
     int alloc_samples = 1024, num_samples = 0;
     int16_t* music_buf = (int16_t*)malloc(alloc_samples * 2 * 2);
@@ -129,17 +129,23 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
         return 0;
     }
     unsigned char* buf = file_buf;
+    int i, len = 0;
 
     // declared in "minimp3.h"
     mp3dec_frame_info_t *info=malloc(sizeof(mp3dec_frame_info_t));
     mp3dec_t *dec=malloc(sizeof(mp3dec_t ));
-
     mp3dec_init(dec);
+
     while(1)
     {
         int16_t *frame_buf=malloc(2 * 1152* sizeof(int16_t));
             // decode the PCM data of one frame (1152 for mono, 2 * 1152 for stereo)
         int samples = mp3dec_decode_frame(dec, buf, music_size, frame_buf, info);
+        if(*sampleRate == 0)
+        {
+            *sampleRate = info->hz;
+            setSampleRate(*sampleRate);
+        }
         // num of samples
         if (alloc_samples < (num_samples + samples)) // need to expand the array which functions as a vector
         {
@@ -160,21 +166,16 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
             break;
         buf += info->frame_bytes;
         music_size -= info->frame_bytes;
-          int i;
-      
         for(i = p * info->channels; i < num_samples * info->channels; i += 256)
         {
-            int len = ((num_samples - p) * info->channels * 2 < 512 )? (num_samples - p) * 2 * info->channels : 512;
-            
-            //printf("%d\n", len);
+            len = ((num_samples - p) * info->channels * 2 < 512 )? (num_samples - p) * 2 * info->channels : 512;
             kwrite((char*)(music_buf + p * info->channels), len);
             p += (len/2/info->channels);
 
         }
     }
-    int len = (num_samples - p) * 2 * info->channels;
+    len = (num_samples - p) * 2 * info->channels;
     kwrite((uchar*)(music_buf + p * info->channels), len);
-    p += (len/2/info->channels);
 
     if (alloc_samples > num_samples) //shrink the data array
     {
@@ -200,47 +201,6 @@ int16_t* DecodeMp3ToBuffer(char* filename, uint32_t* sampleRate, uint32_t* total
     
 }
 
-// get the name of input file
-void splitpath(const char* path, char* drv, char* dir, char* name, char* ext)
-{
-    const char* end;
-    const char* p;
-    const char* s;
-    if (path[0] && path[1] == ':') {
-        if (drv) {
-            *drv++ = *path++;
-            *drv++ = *path++;
-            *drv = '\0';
-        }
-    }
-    else if (drv)
-        *drv = '\0';
-    for (end = path; *end && *end != ':';)
-        end++;
-    for (p = end; p > path && *--p != '\\' && *p != '/';)
-        if (*p == '.') {
-            end = p;
-            break;
-        }
-    if (ext)
-        for (s = end; (*ext = *s++);)
-            ext++;
-    for (p = end; p > path;)
-        if (*--p == '\\' || *p == '/') {
-            p++;
-            break;
-        }
-    if (name) {
-        for (s = p; s < end;)
-            *name++ = *s++;
-        *name = '\0';
-    }
-    if (dir) {
-        for (s = path; s < p;)
-            *dir++ = *s++;
-        *dir = '\0';
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -263,8 +223,7 @@ int main(int argc, char* argv[])
 
     char *in_file = argv[1];
     wavBuffer = DecodeMp3ToBuffer(in_file, &sampleRate, &totalSampleCount, &channels);
-    splitpath(in_file, drive, dir, fname, ext);
-    //sprintf(out_file, "%s%s%s.wav", drive, dir, fname);
+
     
     int p = 0;
     for (int i = 0; i < strlen(drive); i++)
