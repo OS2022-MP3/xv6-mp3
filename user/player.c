@@ -184,21 +184,12 @@ int main(void)
             }
             extensionname = name + pos;
             play_pid = fork();
-<<<<<<< HEAD
             if (play_pid == 0 && strcmp(extensionname, ".wav") == 0)
                 play_wav(input_str + 5);
             else if (play_pid == 0 && strcmp(extensionname, ".mp3") == 0)
                 play_mp3(input_str + 5);
             else if (play_pid == 0 && strcmp(extensionname, ".flac") == 0)
                 play_flac(input_str + 5);
-=======
-            if (play_pid == 0 && strcmp(extensionname,".wav")==0)
-              play_wav(input_str + 5);
-            else if(play_pid == 0 && strcmp(extensionname,".mp3")==0)
-              play_mp3(input_str + 5);
-            else if(play_pid == 0 && strcmp(extensionname,".flac")==0)
-              play_flac(input_str + 5);  
->>>>>>> b153b9c91c92f3708c401ef2c30e715a0fb0e1d9
         }
         else if (strcmp(input_str, "stop") == 0)
         {
