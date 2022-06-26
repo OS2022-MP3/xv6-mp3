@@ -51,5 +51,7 @@ Enter Command:
   * 若`fs.img`存在：`rm fs.img`
   * `make qemu`
 
+### 技术细节
 
+请参考`doc/`文件夹下的实验报告。
 
